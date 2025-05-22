@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+.env
+*.env
+*.sqlite3
+*.log
+
+# Flutter
+build/
+.dart_tool/
+.flutter-plugins
+.packages
+.pub-cache/
+.idea/
+*.iml
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
