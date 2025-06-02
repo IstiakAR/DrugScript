@@ -28,7 +28,7 @@ class _MedicineSearchAppState extends State<MedicineSearchApp> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://0.0.0.0:5000/search'),  // Use your IP or hostname
+        Uri.parse('http://0.0.0.0:5000/search'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'query': query}),
       );
@@ -73,7 +73,25 @@ class _MedicineSearchAppState extends State<MedicineSearchApp> {
         ),
         child: Column(
           children: [
-            SizedBox(height: 50.0),
+            Align(
+              alignment: Alignment.topLeft,
+              child: Padding(
+              padding: const EdgeInsets.only(left: 16.0, top: 16.0),
+              child: ElevatedButton(
+                onPressed: () {
+                Navigator.pushReplacementNamed(context, '/homePage');
+                },
+                child: const Icon(Icons.arrow_back),
+                style: ElevatedButton.styleFrom(
+                shape: const CircleBorder(),
+                padding: const EdgeInsets.all(12),
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.blue,
+                ),
+              ),
+              ),
+            ),
+            SizedBox(height: 10.0),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Card(

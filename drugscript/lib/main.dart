@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'medicine_search.dart';
 import 'login_page.dart';
+import 'home_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,8 +22,8 @@ class MyApp extends StatelessWidget {
       initialRoute: '/loginPage',
       routes: {
         '/loginPage' : (context) => const LoginPage(),
+        '/homePage': (context) => const HomePage(),
         '/medicineSearch': (context) => const MedicineSearchApp(),
-        // '/secondPage': (context) => const SecondPage(),
       },
     );
   }

@@ -23,7 +23,7 @@ class _LoginPageState extends State<LoginPage> {
           _isLoading = false;
         });
         // Just navigate to the next screen
-        Navigator.pushReplacementNamed(context, '/medicineSearch');
+        Navigator.pushReplacementNamed(context, '/homePage');
       }
     });
   }
