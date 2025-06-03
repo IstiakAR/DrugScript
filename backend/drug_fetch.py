@@ -56,7 +56,7 @@ def load_medicines() -> List[Dict[str, Any]]:
 
 
 def search_medicine(query: str) -> List[Dict[str, Any]]:
-    """Search medicines by name, generic name, or manufacturer"""
+    """Search medicines by name, generic name"""
     global medicines
 
     # Ensure medicines are loaded
@@ -66,23 +66,4 @@ def search_medicine(query: str) -> List[Dict[str, Any]]:
     query = query.lower()
     return [med for med in medicines if
             query in med["medicine_name"].lower() or
-            query in med["generic_name"].lower() or
-            query in med["manufacturer_name"].lower()]
-
-
-# This will only run when the file is executed directly
-if __name__ == "__main__":
-    meds = load_medicines()
-
-    if meds:
-        print("\nSample entry:")
-        for key, value in meds[0].items():
-            print(f"{key}: {value}")
-
-        search_results = search_medicine("para")
-        print(f"\nFound {len(search_results)} results for 'para':")
-        for i, med in enumerate(search_results[:3], 1):
-            print(
-                f"{i}. {med['medicine_name']} - {med['generic_name']} ({med['strength']})")
-        if len(search_results) > 3:
-            print(f"...and {len(search_results) - 3} more")
+            query in med["generic_name"].lower()]

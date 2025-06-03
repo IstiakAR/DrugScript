@@ -36,13 +36,18 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ],
                   ),
-                  CircleAvatar(
-                    radius: 25,
-                    backgroundColor: Colors.blue[100],
-                    child: Icon(
-                      Icons.person,
-                      color: Colors.blue[700],
-                      size: 30,
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pushReplacementNamed(context, '/profilePage');
+                    },
+                    child: CircleAvatar(
+                      radius: 25,
+                      backgroundColor: Colors.blue[100],
+                      child: Icon(
+                        Icons.person,
+                        color: Colors.blue[700],
+                        size: 30,
+                      ),
                     ),
                   ),
                 ],
@@ -82,9 +87,9 @@ class _HomePageState extends State<HomePage> {
                 childAspectRatio: 1.2,
                 children: [
                   _buildActionCard('Medicine Search', Icons.search, Colors.blue, '/medicineSearch'),
-                  _buildActionCard('Create Prescription', Icons.add_circle, Colors.green, '/medicineSearch'),
-                  _buildActionCard('View Prescriptions', Icons.description, Colors.purple, '/medicineSearch'),
-                  _buildActionCard('Scan QR', Icons.qr_code_scanner, Colors.orange, '/medicineSearch'),
+                  _buildActionCard('Create Prescription', Icons.add_circle, Colors.green, '/emptyPage'),
+                  _buildActionCard('View Prescriptions', Icons.description, Colors.purple, '/emptyPage'),
+                  _buildActionCard('Scan QR', Icons.qr_code_scanner, Colors.orange, '/emptyPage'),
                 ],
               ),
               const SizedBox(height: 20),
@@ -93,15 +98,11 @@ class _HomePageState extends State<HomePage> {
               Row(
                 children: [
                   Expanded(
-                    child: _buildSecondaryAction('My Reports', Icons.analytics, '/medicineSearch'),
+                    child: _buildSecondaryAction('My Reports', Icons.analytics, '/emptyPage'),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: _buildSecondaryAction('Shared With Me', Icons.share, '/medicineSearch'),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildSecondaryAction('Settings', Icons.settings, '/medicineSearch'),
+                    child: _buildSecondaryAction('Shared With Me', Icons.share, '/emptyPage'),
                   ),
                 ],
               ),
@@ -153,7 +154,7 @@ class _HomePageState extends State<HomePage> {
                       width: double.infinity,
                       child: TextButton.icon(
                         onPressed: () {
-                          Navigator.pushReplacementNamed(context, '/medicineReminders');
+                          Navigator.pushReplacementNamed(context, '/emptyPage');
                         },
                         icon: const Icon(Icons.visibility),
                         label: const Text('View all reminders'),
@@ -165,41 +166,6 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 30),
-
-              // Bottom Actions
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/loginPage');
-                      },
-                      icon: const Icon(Icons.person),
-                      label: const Text('My Profile'),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        side: BorderSide(color: Colors.blue[300]!),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/loginPage');
-                      },
-                      icon: const Icon(Icons.logout),
-                      label: const Text('Logout'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red[400],
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                    ),
-                  ),
-                ],
               ),
             ],
           ),

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'medicine_search.dart';
 import 'login_page.dart';
 import 'home_page.dart';
+import 'empty_page.dart';
+import 'profile_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,6 +26,8 @@ class MyApp extends StatelessWidget {
         '/loginPage' : (context) => const LoginPage(),
         '/homePage': (context) => const HomePage(),
         '/medicineSearch': (context) => const MedicineSearchApp(),
+        '/emptyPage': (context) => const EmptyPage(),
+        '/profilePage' : (context) => const ProfilePage(),
       },
     );
   }

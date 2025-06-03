@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'medicine_detail.dart';
 
 class MedicineSearchApp extends StatefulWidget {
   const MedicineSearchApp({super.key});
@@ -12,7 +13,7 @@ class _MedicineSearchAppState extends State<MedicineSearchApp> {
   // State variables
   List<dynamic> searchResults = [];
   bool isLoading = false;
-  
+
   // Search function
   Future<void> sendSearchToPython(String query) async {
     if (query.isEmpty) {
@@ -63,130 +64,153 @@ class _MedicineSearchAppState extends State<MedicineSearchApp> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color.fromARGB(255, 255, 255, 255), // Light blue 100
-              Color(0xFFE1F5FE), // Light blue 100
-              Color.fromARGB(255, 255, 255, 255), // Light blue 100
-              Color(0xFFE1F5FE), // Light blue 100
-              Color.fromARGB(255, 255, 255, 255), // Light blue 100
+              Color.fromARGB(255, 255, 255, 255),
+              Color(0xFFE1F5FE),
+              Color.fromARGB(255, 255, 255, 255),
+              Color(0xFFE1F5FE),
+              Color.fromARGB(255, 255, 255, 255),
             ],
           ),
         ),
-        child: Column(
-          children: [
-            Align(
-              alignment: Alignment.topLeft,
-              child: Padding(
-              padding: const EdgeInsets.only(left: 16.0, top: 16.0),
-              child: ElevatedButton(
-                onPressed: () {
-                Navigator.pushReplacementNamed(context, '/homePage');
-                },
-                child: const Icon(Icons.arrow_back),
-                style: ElevatedButton.styleFrom(
-                shape: const CircleBorder(),
-                padding: const EdgeInsets.all(12),
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.blue,
-                ),
-              ),
-              ),
-            ),
-            SizedBox(height: 10.0),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                  child: TextField(
-                    decoration: InputDecoration(
-                      labelText: 'Search Medicines',
-                      hintText: 'Enter medicine name or generic name',
-                      prefixIcon: Icon(Icons.search, color: Colors.blue),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 15),
+        child: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 16.0, right: 15.0, top: 16.0),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.blue),
+                      onPressed: () {
+                        Navigator.pushReplacementNamed(context, '/homePage');
+                      },
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        padding: const EdgeInsets.all(12),
+                        shape: const CircleBorder(),
+                        elevation: 2,
+                      ),
                     ),
-                    onChanged: (value) {
-                      sendSearchToPython(value);
-                    },
-                  ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                        horizontal: 8.0,
+                        vertical: 4.0,
+                        ),
+                        child: TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Enter medicine name',
+                          prefixIcon: Icon(Icons.search, color: Colors.blue),
+                          border: InputBorder.none,
+                          hintStyle: TextStyle(color: Colors.grey),
+                          contentPadding: EdgeInsets.all(12),
+                        ),
+                        onChanged: (value) {
+                          sendSearchToPython(value);
+                        },
+                        ),
+                      ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            SizedBox(height: 20),
-            isLoading 
-              ? Center(child: CircularProgressIndicator()) 
-              : Expanded(
-                  child: searchResults.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.search, size: 80, color: Colors.blue.withOpacity(0.5)),
-                            SizedBox(height: 16),
-                            Text(
-                              'Search for medicines',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.blue.shade800,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: searchResults.length,
-                        itemBuilder: (context, index) {
-                          final medicine = searchResults[index];
-                          return Card(
-                            margin: EdgeInsets.symmetric(vertical: 6),
-                            elevation: 2,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: ListTile(
-                              contentPadding: EdgeInsets.all(12),
-                              title: Text(
-                                medicine['medicine_name'],
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+              SizedBox(height: 20),
+              isLoading
+                  ? Center(child: CircularProgressIndicator())
+                  : Expanded(
+                    child:
+                        searchResults.isEmpty
+                            ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  SizedBox(height: 4),
-                                  Text('${medicine['generic_name']} ${medicine['strength']}'),
-                                  SizedBox(height: 2),
+                                  Icon(
+                                    Icons.search,
+                                    size: 80,
+                                    color: Colors.blue.withOpacity(0.5),
+                                  ),
+                                  SizedBox(height: 16),
                                   Text(
-                                    'Manufacturer: ${medicine['manufacturer_name']}',
-                                    style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                                    'Search for medicines',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.blue.shade800,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                 ],
                               ),
-                              trailing: Text(
-                                '৳${medicine['price']}',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: Colors.blue.shade800,
-                                ),
-                              ),
-                              onTap: () {
-                                // You can navigate to a detail page here
+                            )
+                            : ListView.builder(
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              itemCount: searchResults.length,
+                              itemBuilder: (context, index) {
+                                final medicine = searchResults[index];
+                                return Card(
+                                  margin: EdgeInsets.symmetric(vertical: 6),
+                                  elevation: 2,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: ListTile(
+                                    contentPadding: EdgeInsets.all(12),
+                                    title: Text(
+                                      medicine['medicine_name'],
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    subtitle: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        SizedBox(height: 4),
+                                        Text(
+                                          '${medicine['generic_name']} ${medicine['strength']}',
+                                        ),
+                                        SizedBox(height: 2),
+                                        Text(
+                                          'Manufacturer: ${medicine['manufacturer_name']}',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey.shade700,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    trailing: Text(
+                                      '৳${medicine['price']}',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: Colors.blue.shade800,
+                                      ),
+                                    ),
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => MedicineDetailPage(
+                                            medicine: medicine,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                );
                               },
                             ),
-                          );
-                        },
-                      ),
-                ),
-          ],
+                  ),
+            ],
+          ),
         ),
       ),
     );
