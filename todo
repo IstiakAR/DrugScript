@@ -1,19 +1,19 @@
 # Core Feature
-- [ ] Sign in and storage
-- [ ] ~~Medicine Searching~~
-- [ ] Creating, viewing, sharing Prescription
-- [ ] Scanning and viewing reports
-- [ ] Reminder based on prescription
+- Sign in and storage
+- ~~Medicine Searching~~
+- Creating, viewing, sharing Prescription
+- Scanning and viewing reports
+- Reminder based on prescription
+- Profile
 
 ## Non-core but necessary
-- [ ] QR implementation
-- [ ] Profile
-- [ ] better dataset 
+- QR implementation
+- better dataset 
 
 ### Extras
-- [ ] Theme
-- [ ] Expense
-- [ ] Appointment
-- [ ] Insurance
-- [ ] Multi-language
-- [ ] Text-to-Voice
+- Theme
+- Expense
+- Appointment
+- Insurance
+- Multi-language
+- Text-to-Voice
