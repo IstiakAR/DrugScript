@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "478338509754",
+    "project_id": "drug-script",
+    "storage_bucket": "drug-script.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:478338509754:android:d69e73b73d163901130b83",
+        "android_client_info": {
+          "package_name": "com.example.drugscript"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "478338509754-04obarsjottgbqgm8adr21vtcrpp40nq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.drugscript",
+            "certificate_hash": "bf4a4eacb1d6e7919cd6b3c573bce841b75e4dbe"
+          }
+        },
+        {
+          "client_id": "478338509754-0dmm2geil8m65uuchbj6bkki4be2m4kf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD7-MHXy7Hsd5NQk0OV_9ROaYA8ezfGB20"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "478338509754-0dmm2geil8m65uuchbj6bkki4be2m4kf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
