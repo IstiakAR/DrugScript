@@ -167,7 +167,7 @@ class MedicineDetailPage extends StatelessWidget {
                                 medicine['indication'] ?? 'Not available',
                                 style: const TextStyle(
                                   fontSize: 14,
-                                  color: Color.fromARGB(221, 0, 76, 199),
+                                  color: Color.fromARGB(221, 0, 58, 230),
                                 ),
                                 ),
                               ),
@@ -184,6 +184,24 @@ class MedicineDetailPage extends StatelessWidget {
                               ],
                             ),
                             const SizedBox(height: 20),
+
+
+                            // Similar Medicines (Same generic name)
+                            _buildInfoSection(
+                              'Similar Medicines',
+                              [
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: Text( 'No similar medicines found',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ),
+                              ]
+                            ),
+
                           ],
                         ),
                       ),
