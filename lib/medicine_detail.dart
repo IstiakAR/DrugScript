@@ -30,7 +30,7 @@ class MedicineDetailPage extends StatelessWidget {
                 child: CustomScrollView(
                   slivers: [
                     SliverAppBar(
-                      expandedHeight: 300,
+                      expandedHeight: 150,
                       pinned: true,
                       backgroundColor: Colors.blue[600],
                       automaticallyImplyLeading: false,
@@ -49,42 +49,6 @@ class MedicineDetailPage extends StatelessWidget {
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    // Medicine Image Placeholder
-                                    Container(
-                                      width: 120,
-                                      height: 120,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius: BorderRadius.circular(12),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withOpacity(0.1),
-                                            spreadRadius: 2,
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 4),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            Icons.medication,
-                                            size: 50,
-                                            color: Colors.blue[300],
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            'No Image',
-                                            style: TextStyle(
-                                              color: Colors.grey[600],
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(height: 20),
                                     // Medicine Name
                                     Padding(
                                       padding:
@@ -95,18 +59,18 @@ class MedicineDetailPage extends StatelessWidget {
                                         textAlign: TextAlign.center,
                                         style: const TextStyle(
                                           color: Colors.white,
-                                          fontSize: 24,
+                                          fontSize: 30,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(height: 8),
+                                    const SizedBox(height: 5),
                                     // Generic Name
                                     Text(
                                       medicine['generic_name'] ?? 'Unknown Generic',
                                       style: TextStyle(
                                         color: Colors.white.withOpacity(0.9),
-                                        fontSize: 16,
+                                        fontSize: 12,
                                       ),
                                     ),
                                   ],
@@ -121,9 +85,10 @@ class MedicineDetailPage extends StatelessWidget {
                                 icon: const Icon(Icons.arrow_back, color: Colors.white),
                                 onPressed: () => Navigator.pop(context),
                                 style: IconButton.styleFrom(
-                                  padding: const EdgeInsets.all(12),
+                                  padding: const EdgeInsets.all(0),
                                   shape: const CircleBorder(),
-                                  elevation: 2,
+                                  elevation: 10,
+                                  backgroundColor: Colors.white.withOpacity(0.1)
                                 ),
                               ),
                             ),
@@ -131,6 +96,7 @@ class MedicineDetailPage extends StatelessWidget {
                         ),
                       ),
                     ),
+
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.all(20),
@@ -175,27 +141,46 @@ class MedicineDetailPage extends StatelessWidget {
                                 ],
                               ),
                             ),
+
                             const SizedBox(height: 20),
 
                             // Basic Information
                             _buildInfoSection(
                               'Basic Information',
                               [
-                                _buildInfoRow(
-                                    'Generic Name', medicine['generic_name']),
+                                _buildInfoRow('Generic Name', medicine['generic_name']),
+                                _buildInfoRow('Category Name', medicine['category_name']),
                                 _buildInfoRow('Strength', medicine['strength']),
-                                _buildInfoRow('Dosage Form', medicine['dosage_form']),
+                                _buildInfoRow('Dosage Form', medicine['dosage form']),
                                 _buildInfoRow('Unit', medicine['unit']),
                               ],
                             ),
+                            const SizedBox(height: 20),
+
+                            // Indications Information
+                            _buildInfoSection(
+                              'Indications',
+                              [
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: Text(
+                                medicine['indication'] ?? 'Not available',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Color.fromARGB(221, 0, 76, 199),
+                                ),
+                                ),
+                              ),
+                              ],
+                            ),
+
                             const SizedBox(height: 20),
 
                             // Manufacturer Information
                             _buildInfoSection(
                               'Manufacturer',
                               [
-                                _buildInfoRow(
-                                    'Company', medicine['manufacturer_name']),
+                                _buildInfoRow('Company', medicine['manufacturer_name']),
                               ],
                             ),
                             const SizedBox(height: 20),
