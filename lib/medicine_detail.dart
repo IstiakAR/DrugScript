@@ -167,7 +167,7 @@ class MedicineDetailPage extends StatelessWidget {
                                 medicine['indication'] ?? 'Not available',
                                 style: const TextStyle(
                                   fontSize: 14,
-                                  color: Color.fromARGB(221, 0, 58, 230),
+                                  color: Color.fromARGB(255, 0, 0, 0),
                                 ),
                                 ),
                               ),
