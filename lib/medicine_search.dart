@@ -12,6 +12,7 @@ class MedicineSearchApp extends StatefulWidget {
 }
 
 class _MedicineSearchAppState extends State<MedicineSearchApp> {
+
   // State variables
   List<dynamic> searchResults = [];
   bool isLoading = false;
@@ -19,6 +20,7 @@ class _MedicineSearchAppState extends State<MedicineSearchApp> {
   // Search function
   Future<void> sendSearchToPython(String query) async {
     if (query.isEmpty) {
+      print('Search query is empty');
       setState(() {
         searchResults = [];
       });
@@ -57,6 +59,8 @@ class _MedicineSearchAppState extends State<MedicineSearchApp> {
     }
   }
 
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,6 +78,7 @@ class _MedicineSearchAppState extends State<MedicineSearchApp> {
             ],
           ),
         ),
+        
         child: SafeArea(
           child: Column(
             children: [
@@ -87,37 +92,46 @@ class _MedicineSearchAppState extends State<MedicineSearchApp> {
                         Navigator.pushReplacementNamed(context, '/homePage');
                       },
                       style: IconButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        padding: const EdgeInsets.all(12),
-                        shape: const CircleBorder(),
-                        elevation: 2,
+                        padding: const EdgeInsets.all(0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                        elevation: 10,
+                        backgroundColor: const Color.fromARGB(255, 0, 153, 255).withOpacity(0.1)
                       ),
                     ),
-                    const SizedBox(width: 8),
+
                     Expanded(
                       child: Card(
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                        horizontal: 8.0,
-                        vertical: 4.0,
+                        elevation: 0.1,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                        child: TextField(
-                        decoration: InputDecoration(
-                          hintText: 'Enter medicine name',
-                          prefixIcon: Icon(Icons.search, color: Colors.blue),
-                          border: InputBorder.none,
-                          hintStyle: TextStyle(color: Colors.grey),
-                          contentPadding: EdgeInsets.all(12),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                          horizontal: 0,
+                          vertical: 0,
+                          ),
+                          child: TextField(
+                          decoration: InputDecoration(
+                            hintText: 'Enter medicine name',
+                            prefixIcon: Icon(Icons.search, color: Colors.blue),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              borderSide: BorderSide(color: const Color.fromARGB(255, 65, 166, 250), width: 0.5),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              borderSide: BorderSide(color: Colors.blue, width: 0.8),
+                            ),
+                            hintStyle: TextStyle(color: const Color.fromARGB(255, 138, 138, 138)),
+                            contentPadding: EdgeInsets.all(0),
+                          ),
+                          onChanged: (value) {
+                            sendSearchToPython(value);
+                          },
+                          ),
                         ),
-                        onChanged: (value) {
-                          sendSearchToPython(value);
-                        },
-                        ),
-                      ),
                       ),
                     ),
                   ],
@@ -150,6 +164,7 @@ class _MedicineSearchAppState extends State<MedicineSearchApp> {
                                 ],
                               ),
                             )
+
                             : ListView.builder(
                               padding: EdgeInsets.symmetric(horizontal: 16),
                               itemCount: searchResults.length,
@@ -157,7 +172,7 @@ class _MedicineSearchAppState extends State<MedicineSearchApp> {
                                 final medicine = searchResults[index];
                                 return Card(
                                   margin: EdgeInsets.symmetric(vertical: 6),
-                                  elevation: 2,
+                                  elevation: 1,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10),
                                   ),
