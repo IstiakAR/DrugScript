@@ -216,6 +216,9 @@ class MedicineDetailPage extends StatelessWidget {
     );
   }
 
+
+
+
   Widget _buildInfoSection(String title, List<Widget> children) {
     return Container(
       width: double.infinity,
