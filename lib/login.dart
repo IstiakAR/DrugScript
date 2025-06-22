@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 
-
-
 class Login extends StatefulWidget {
   const Login({super.key});
 
@@ -27,7 +25,7 @@ class _LoginState extends State<Login>{
     await FirebaseAuth.instance.signInWithCredential(credential);
   }
   
-    @override
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
@@ -40,7 +38,7 @@ class _LoginState extends State<Login>{
         child: SingleChildScrollView(
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 30),
-            padding: const EdgeInsets.all(32),
+            padding: const EdgeInsets.all(48),
             decoration: BoxDecoration(
               color: const Color.fromARGB(255, 255, 255, 255),
               borderRadius: BorderRadius.circular(24),
@@ -52,13 +50,14 @@ class _LoginState extends State<Login>{
                 ),
               ],
             ),
+
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   Icons.receipt_long_rounded,
                   size: 82,
-                  color: Color.fromARGB(255, 1, 86, 30),
+                  color: Color.fromARGB(255, 0, 119, 255),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -71,10 +70,10 @@ class _LoginState extends State<Login>{
                   style: theme.textTheme.bodyMedium,
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 100),
                 SizedBox(
                   width: double.infinity,
-                  height: 48,
+                  height: 55,
                   child: OutlinedButton.icon(
                     onPressed: () {
                       login();
@@ -86,11 +85,11 @@ class _LoginState extends State<Login>{
                     ),
                     label: const Text(
                       'Continue with Google',
-                      style: TextStyle(color: Color.fromARGB(255, 1, 86, 30), fontSize: 16),
+                      style: TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 17),
                     )
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 7),
               ],
             ),
           ),

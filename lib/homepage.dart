@@ -31,7 +31,7 @@ class _HomePageState extends State<HomePage> {
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
-                          color: Colors.blue,
+                          color: Color.fromARGB(255, 47, 47, 49),
                         ),
                       ),
                     ],
@@ -41,32 +41,33 @@ class _HomePageState extends State<HomePage> {
                       Navigator.pushReplacementNamed(context, '/profilePage');
                     },
                     child: CircleAvatar(
-                      radius: 25,
-                      backgroundColor: Colors.blue[100],
+                      radius: 22,
+                      backgroundColor: const Color.fromARGB(255, 220, 239, 255),
                       child: Icon(
-                        Icons.person,
-                        color: Colors.blue[700],
+                        Icons.person_4_rounded,
+                        color: Color.fromARGB(255, 47, 47, 49),
                         size: 30,
                       ),
                     ),
                   ),
                 ],
               ),
+
               const SizedBox(height: 30),
 
               // Quick Stats Cards
               Row(
                 children: [
                   Expanded(
-                    child: _buildStatCard('Active Prescriptions', '3', Icons.medication, Colors.green),
+                    child: _buildStatCard('Active Prescriptions', '3', Icons.medication, Color.fromARGB(255, 26,90,100)),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: _buildStatCard('Today\'s Reminders', '2', Icons.notifications_active, Colors.orange),
+                    child: _buildStatCard('Today\'s Reminders', '2', Icons.notifications_active, Color.fromARGB(255, 64, 53, 123)),
                   ),
                 ],
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 20),
 
               // Main Actions Grid
               const Text(
@@ -86,10 +87,11 @@ class _HomePageState extends State<HomePage> {
                 crossAxisSpacing: 16,
                 childAspectRatio: 1.2,
                 children: [
-                  _buildActionCard('Medicine Search', Icons.search, Colors.blue, '/medicineSearch'),
-                  _buildActionCard('Create Prescription', Icons.add_circle, Colors.green, '/emptyPage'),
-                  _buildActionCard('View Prescriptions', Icons.description, Colors.purple, '/emptyPage'),
-                  _buildActionCard('Scan QR', Icons.qr_code_scanner, Colors.orange, '/emptyPage'),
+                  // rgba(26,90,100,255)
+                  _buildActionCard('Medicine Search', Icons.search, Color.fromARGB(255, 64, 55, 124), '/medicineSearch'),
+                  _buildActionCard('Create Prescription', Icons.add_circle, Color.fromARGB(255, 109, 205, 163), '/emptyPage'),
+                  _buildActionCard('View Prescriptions', Icons.description, Color.fromARGB(255, 51,184,196), '/emptyPage'),
+                  _buildActionCard('Scan QR', Icons.qr_code_scanner, Color.fromARGB(255, 47, 47, 49), '/emptyPage'),
                 ],
               ),
               const SizedBox(height: 20),
@@ -106,6 +108,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ],
               ),
+
               const SizedBox(height: 30),
 
               // Medicine Reminders Section
@@ -124,6 +127,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ],
                 ),
+
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -156,10 +160,10 @@ class _HomePageState extends State<HomePage> {
                         onPressed: () {
                           Navigator.pushReplacementNamed(context, '/emptyPage');
                         },
-                        icon: const Icon(Icons.visibility),
-                        label: const Text('View all reminders'),
+                        icon: const Icon(Icons.visibility, size: 20),
+                        label: const Text('View all reminders', style: TextStyle(fontSize: 16)),
                         style: TextButton.styleFrom(
-                          foregroundColor: Colors.blue[600],
+                          foregroundColor: Color.fromARGB(255, 47, 47, 49),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                       ),
@@ -174,15 +178,16 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+
   Widget _buildStatCard(String title, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: color,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withOpacity(0.05),
             spreadRadius: 0,
             blurRadius: 8,
             offset: const Offset(0, 2),
@@ -192,21 +197,21 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(height: 8),
+          Icon(icon, color: Colors.white, size: 30),
+          const SizedBox(height: 3),
           Text(
             value,
             style: TextStyle(
-              fontSize: 24,
+              fontSize: 30,
               fontWeight: FontWeight.bold,
-              color: color,
+              color: Colors.white,
             ),
           ),
           Text(
             title,
             style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
+              fontSize: 15,
+              color: Colors.white,
             ),
           ),
         ],
@@ -226,7 +231,7 @@ class _HomePageState extends State<HomePage> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: Colors.grey.withOpacity(0.05),
               spreadRadius: 0,
               blurRadius: 10,
               offset: const Offset(0, 4),
@@ -239,13 +244,13 @@ class _HomePageState extends State<HomePage> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withOpacity(1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 icon,
-                color: color,
-                size: 28,
+                color: Colors.white,
+                size: 32,
               ),
             ),
             const SizedBox(height: 12),
@@ -254,8 +259,8 @@ class _HomePageState extends State<HomePage> {
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
               ),
             ),
           ],
@@ -270,22 +275,23 @@ class _HomePageState extends State<HomePage> {
         Navigator.pushReplacementNamed(context, route);
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!),
+          border: Border.all(color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.1)),
         ),
         child: Column(
           children: [
-            Icon(icon, color: Colors.grey[600], size: 20),
+            Icon(icon, color: Color.fromARGB(255, 47, 47, 49), size: 30),
             const SizedBox(height: 4),
             Text(
               title,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[700],
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Color.fromARGB(255, 117, 117, 117),
               ),
             ),
           ],
