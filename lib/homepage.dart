@@ -89,7 +89,7 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   // rgba(26,90,100,255)
                   _buildActionCard('Medicine Search', Icons.search, Color.fromARGB(255, 64, 55, 124), '/medicineSearch'),
-                  _buildActionCard('Create Prescription', Icons.add_circle, Color.fromARGB(255, 109, 205, 163), '/emptyPage'),
+                  _buildActionCard('Create Prescription', Icons.add_circle, Color.fromARGB(255, 109, 205, 163), '/createPrescription'),
                   _buildActionCard('View Prescriptions', Icons.description, Color.fromARGB(255, 51,184,196), '/emptyPage'),
                   _buildActionCard('Scan QR', Icons.qr_code_scanner, Color.fromARGB(255, 47, 47, 49), '/emptyPage'),
                 ],
@@ -104,7 +104,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: _buildSecondaryAction('Shared With Me', Icons.share, '/emptyPage'),
+                    child: _buildSecondaryAction('Shared With Me', Icons.share_outlined, '/emptyPage'),
                   ),
                 ],
               ),

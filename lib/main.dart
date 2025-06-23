@@ -1,3 +1,4 @@
+import 'package:drugscript/create_prescription.dart';
 import 'package:drugscript/homepage.dart';
 import 'package:drugscript/medicine_search.dart';
 import 'package:drugscript/profile.dart';
@@ -34,6 +35,7 @@ class MyApp extends StatelessWidget {
         '/homePage': (context) => HomePage(),
         '/medicineSearch': (context) => const MedicineSearchApp(),
         '/profilePage': (context) => const Profile(),
+        '/createPrescription': (context) => const CreatePrescription(),
       },
     );
   }

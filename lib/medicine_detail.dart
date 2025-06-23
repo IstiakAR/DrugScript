@@ -11,17 +11,7 @@ class MedicineDetailPage extends StatelessWidget {
       backgroundColor: Colors.grey[50],
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color.fromARGB(255, 255, 255, 255),
-              Color(0xFFE1F5FE),
-              Color.fromARGB(255, 255, 255, 255),
-              Color(0xFFE1F5FE),
-              Color.fromARGB(255, 255, 255, 255),
-            ],
-          ),
+          color: Colors.grey[200]
         ),
         child: SafeArea(
           child: Column(
@@ -42,7 +32,7 @@ class MedicineDetailPage extends StatelessWidget {
                                 gradient: LinearGradient(
                                   begin: Alignment.topCenter,
                                   end: Alignment.bottomCenter,
-                                  colors: [Colors.blue[600]!, Colors.blue[800]!],
+                                  colors: [Colors.blue[800]!, Color.fromARGB(255, 64, 55, 124)],
                                 ),
                               ),
                               child: Center(
@@ -54,8 +44,7 @@ class MedicineDetailPage extends StatelessWidget {
                                       padding:
                                           const EdgeInsets.symmetric(horizontal: 20),
                                       child: Text(
-                                        medicine['medicine_name'] ??
-                                            'Unknown Medicine',
+                                        medicine['medicine_name'] ?? 'Unknown Medicine',
                                         textAlign: TextAlign.center,
                                         style: const TextStyle(
                                           color: Colors.white,
@@ -108,9 +97,9 @@ class MedicineDetailPage extends StatelessWidget {
                               width: double.infinity,
                               padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
-                                color: Colors.green[50],
+                                color: Color.fromARGB(255, 64, 55, 124),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.green[200]!),
+                                border: Border.all(color: Color.fromARGB(255, 64, 55, 124)),
                               ),
                               child: Row(
                                 mainAxisAlignment:
@@ -124,7 +113,7 @@ class MedicineDetailPage extends StatelessWidget {
                                         'Price',
                                         style: TextStyle(
                                           fontSize: 14,
-                                          color: Colors.grey[600],
+                                          color: const Color.fromARGB(255, 255, 255, 255),
                                         ),
                                       ),
                                       const SizedBox(height: 4),
@@ -133,7 +122,7 @@ class MedicineDetailPage extends StatelessWidget {
                                         style: TextStyle(
                                           fontSize: 28,
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.green[700],
+                                          color: const Color.fromARGB(255, 255, 255, 255),
                                         ),
                                       ),
                                     ],
@@ -142,7 +131,7 @@ class MedicineDetailPage extends StatelessWidget {
                               ),
                             ),
 
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 10),
 
                             // Basic Information
                             _buildInfoSection(
@@ -155,7 +144,7 @@ class MedicineDetailPage extends StatelessWidget {
                                 _buildInfoRow('Unit', medicine['unit']),
                               ],
                             ),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 10),
 
                             // Indications Information
                             _buildInfoSection(
@@ -174,7 +163,7 @@ class MedicineDetailPage extends StatelessWidget {
                               ],
                             ),
 
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 10),
 
                             // Manufacturer Information
                             _buildInfoSection(
@@ -183,7 +172,7 @@ class MedicineDetailPage extends StatelessWidget {
                                 _buildInfoRow('Company', medicine['manufacturer_name']),
                               ],
                             ),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 10),
 
 
                             // Similar Medicines (Same generic name)
@@ -228,7 +217,7 @@ class MedicineDetailPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withOpacity(0.05),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 4),
@@ -277,6 +266,7 @@ class MedicineDetailPage extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 14,
                 color: Colors.black87,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
