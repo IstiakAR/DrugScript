@@ -5,13 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'medicine_search.dart';
 
-class CreatePrescription extends StatefulWidget {
-  const CreatePrescription({super.key});
+class AddPrescription extends StatefulWidget {
+  const AddPrescription({super.key});
   @override
-  State<CreatePrescription> createState() => _CreatePrescriptionState();
+  State<AddPrescription> createState() => _AddPrescriptionState();
 }
 
-class _CreatePrescriptionState extends State<CreatePrescription> {
+class _AddPrescriptionState extends State<AddPrescription> {
   // Controllers for text fields
   final TextEditingController _doctorNameController = TextEditingController();
   final TextEditingController _contactController = TextEditingController();
