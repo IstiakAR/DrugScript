@@ -247,12 +247,30 @@ class _AddPrescriptionState extends State<AddPrescription> {
       return;
     }
 
+    if(_selectedDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a prescription date')),
+      );
+      return;
+    }
+
+    if (_selectedDiagnosis == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a diagnosis')),
+      );
+      return;
+    }
+
     if (selectedMedicines.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please add at least one medicine')),
       );
       return;
     }
+
+
+
+
 
     setState(() {
       isLoading = true;
@@ -282,6 +300,11 @@ class _AddPrescriptionState extends State<AddPrescription> {
         'contact': _contactController.text,
         'medicines': medicineSlugs, // Make sure this is a list of maps/dictionaries
         'image': base64Image,
+        'date' : _selectedDate != null
+            ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
+            : null,
+        'diagnosis': _selectedDiagnosis,
+        'created_by': FirebaseAuth.instance.currentUser?.uid,
       };
 
       // Get your authentication token
@@ -312,13 +335,18 @@ class _AddPrescriptionState extends State<AddPrescription> {
           // Reset form
           _doctorNameController.clear();
           _contactController.clear();
-
+          
           FocusScope.of(context).unfocus(); 
+
+          Navigator.pushReplacementNamed(context, '/homePage');
+
 
           setState(() {
             selectedMedicines = [];
             prescriptionImage = null;
           });
+
+
         }
       } else {
         // Error
