@@ -502,6 +502,7 @@ class _MedicineSearchAppState extends State<MedicineSearchApp> {
             contentPadding: EdgeInsets.all(0),
           ),
           onChanged: (value) {
+            print('Search query: $value');
             sendSearchToPython(value);
           },
         ),

@@ -1,7 +1,10 @@
 // ignore_for_file: avoid_print
 
+import 'dart:convert';
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'medicine_search.dart';
 
@@ -175,15 +178,75 @@ class _AddPrescriptionState extends State<AddPrescription> {
   void _removeMedicine(int index) {
     setState(() {
       selectedMedicines.removeAt(index);
+      print(selectedMedicines);
     });
   }
 
   // Create prescription
+  // Future<void> _createPrescription() async {
+  //   if (_doctorNameController.text.isEmpty) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text('Please enter doctor name')),
+  //     );
+  //     return;
+  //   }
+
+  //   if (selectedMedicines.isEmpty) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text('Please add at least one medicine')),
+  //     );
+  //     return;
+  //   }
+
+  //   setState(() {
+  //     isLoading = true;
+  //   });
+
+  //   //here implement the logic to save the prescription to the database or server
+
+  //   print(_doctorNameController.text);
+  //   print(_contactController.text);
+  //   print(selectedMedicines);
+  //   print(prescriptionImage?.path ?? 'No image selected');
+
+  //   // 
+
+    
+  //   await Future.delayed(const Duration(seconds: 2)); // Simulate network delay
+    
+  //   setState(() {
+  //     isLoading = false;
+  //   });
+    
+  //   // Show success message
+  //   if (mounted) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text('Prescription created successfully')),
+  //     );
+      
+  //     // Reset form
+  //     _doctorNameController.clear();
+  //     _contactController.clear();
+  //     setState(() {
+  //       selectedMedicines = [];
+  //       prescriptionImage = null;
+  //     });
+  //   }
+  // }
+
+  Future<String?> _getAuthToken() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception('User not authenticated');
+    }
+    return await user.getIdToken(true);
+  }
+
   Future<void> _createPrescription() async {
     if (_doctorNameController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter doctor name')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter doctor name')));
       return;
     }
 
@@ -198,28 +261,79 @@ class _AddPrescriptionState extends State<AddPrescription> {
       isLoading = true;
     });
 
-    // Here you would typically send the data to your backend
-    // For now, just show a success message
-    
-    await Future.delayed(const Duration(seconds: 2)); // Simulate network delay
-    
-    setState(() {
-      isLoading = false;
-    });
-    
-    // Show success message
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Prescription created successfully')),
+    try {
+
+      String base64Image = '';
+      if (prescriptionImage != null) {
+        List<int> imageBytes =
+            await File(prescriptionImage!.path).readAsBytes();
+        base64Image = base64Encode(imageBytes);
+      }
+
+      final List<String> medicineSlugs = selectedMedicines.map((medicine) => medicine['slug'] as String).toList();
+
+      print('Selected Medicines Slugs: $medicineSlugs');
+
+      // Create payload matching your FastAPI Prescription model
+      final Map<String, dynamic> payload = {
+        'doctor_name': _doctorNameController.text,
+        'contact': _contactController.text,
+        'medicines': medicineSlugs, // Make sure this is a list of maps/dictionaries
+        'image': base64Image,
+      };
+
+      // Get your authentication token
+      final String? authToken = await _getAuthToken();
+
+      // Send HTTP request to your FastAPI endpoint
+      final response = await http.post(
+        Uri.parse(
+          'https://fastapi-app-production-6e30.up.railway.app/add_prescription',
+        ),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $authToken', // For authentication
+        },
+        body: jsonEncode(payload),
       );
-      
-      // Reset form
-      _doctorNameController.clear();
-      _contactController.clear();
-      setState(() {
-        selectedMedicines = [];
-        prescriptionImage = null;
-      });
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // Success
+        final responseData = jsonDecode(response.body);
+        print('Server response: $responseData');
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Prescription created successfully')),
+          );
+
+          // Reset form
+          _doctorNameController.clear();
+          _contactController.clear();
+          setState(() {
+            selectedMedicines = [];
+            prescriptionImage = null;
+          });
+        }
+      } else {
+        // Error
+        throw Exception(
+          'Failed to create prescription. Status: ${response.statusCode}, Body: ${response.body}',
+        );
+      }
+    } catch (e) {
+      print('Error creating prescription: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 

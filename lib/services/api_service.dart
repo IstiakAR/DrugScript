@@ -38,7 +38,6 @@ class Information {
 }
 
 
-
 class ApiService {
   final String baseUrl = 'https://fastapi-app-production-6e30.up.railway.app';
   
