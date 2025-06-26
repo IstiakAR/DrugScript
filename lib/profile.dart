@@ -84,59 +84,31 @@ class _ProfileState extends State<Profile> {
       _isLoading = true;
     });
     
-    // Check for empty fields and restore default values
-    if (_nameController.text.trim().isEmpty) {
-      _nameController.text = user?.displayName ?? 'No Name';
-    }
-    
-    if (_bloodTypeController.text.trim().isEmpty) {
-      _bloodTypeController.text = 'Not specified';
-    }
-    
-    if (_allergiesController.text.trim().isEmpty) {
-      _allergiesController.text = 'None';
-    }
-    
-    if (_emergencyContactController.text.trim().isEmpty) {
-      _emergencyContactController.text = 'Not specified';
-    }
-    
-    if (_medicalConditionsController.text.trim().isEmpty) {
-      _medicalConditionsController.text = 'None';
-    }
-    
-    if (_ageController.text.trim().isEmpty) {
-      _ageController.text = 'Not specified';
-    }
-    
-    if (_addressController.text.trim().isEmpty) {
-      _addressController.text = 'Not specified';
-    }
-    
-    if (_phoneController.text.trim().isEmpty) {
-      _phoneController.text = 'Not specified';
-    }
-    
-    if (_genderController.text.trim().isEmpty) {
-      _genderController.text = 'Not specified';
-    }
-    
-    if (_dobController.text.trim().isEmpty) {
-      _dobController.text = 'Not specified';
-    }
-    
+    // Don't set default values here - let the API service handle nulls
+    // Just trim whitespace
+    final trimmedName = _nameController.text.trim();
+    final trimmedAge = _ageController.text.trim();
+    final trimmedAddress = _addressController.text.trim();
+    final trimmedPhone = _phoneController.text.trim();
+    final trimmedGender = _genderController.text.trim();
+    final trimmedDob = _dobController.text.trim();
+    final trimmedBloodType = _bloodTypeController.text.trim();
+    final trimmedAllergies = _allergiesController.text.trim();
+    final trimmedMedicalConditions = _medicalConditionsController.text.trim();
+    final trimmedEmergencyContact = _emergencyContactController.text.trim();
+
     // Save data to FastAPI backend
-    final success = await _apiService.updateUserProfile(
-      name: _nameController.text,
-      bloodType: _bloodTypeController.text,
-      allergies: _allergiesController.text,
-      emergencyContact: _emergencyContactController.text,
-      medicalConditions: _medicalConditionsController.text,
-      age: _ageController.text,
-      address: _addressController.text,
-      phone: _phoneController.text,
-      gender: _genderController.text,
-      dob: _dobController.text,
+    final success = await _apiService.upsertUserProfile(
+      name: trimmedName.isEmpty ? (user?.displayName ?? 'Unknown') : trimmedName,
+      age: trimmedAge,
+      address: trimmedAddress,
+      gender: trimmedGender,
+      phone: trimmedPhone,
+      dateOfBirth: trimmedDob,
+      bloodType: trimmedBloodType,
+      allergies: trimmedAllergies,
+      medicalConditions: trimmedMedicalConditions,
+      emergencyContact: trimmedEmergencyContact,
     );
     
     setState(() {
