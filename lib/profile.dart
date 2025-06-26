@@ -125,25 +125,34 @@ class _ProfileState extends State<Profile> {
       _dobController.text = 'Not specified';
     }
     
-    // Here you would save the data to your backend/Firebase
-    // await _apiService.updateUserProfile(
-    //   name: _nameController.text,
-    //   bloodType: _bloodTypeController.text,
-    //   allergies: _allergiesController.text,
-    //   ...
-    // );
-    
-    // For demonstration, just adding a delay
-    await Future.delayed(const Duration(seconds: 1));
+    // Save data to FastAPI backend
+    final success = await _apiService.updateUserProfile(
+      name: _nameController.text,
+      bloodType: _bloodTypeController.text,
+      allergies: _allergiesController.text,
+      emergencyContact: _emergencyContactController.text,
+      medicalConditions: _medicalConditionsController.text,
+      age: _ageController.text,
+      address: _addressController.text,
+      phone: _phoneController.text,
+      gender: _genderController.text,
+      dob: _dobController.text,
+    );
     
     setState(() {
       _isLoading = false;
       _isEditing = false;
     });
     
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Profile updated successfully')),
-    );
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile updated successfully')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to update profile')),
+      );
+    }
   }
   
   // Add this method to handle cancellation
