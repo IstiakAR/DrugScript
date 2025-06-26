@@ -256,36 +256,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildSecondaryAction(String title, IconData icon, String route) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.pushReplacementNamed(context, route);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.1)),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: Color.fromARGB(255, 47, 47, 49), size: 30),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Color.fromARGB(255, 117, 117, 117),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildReminderItem(String medicine, String time, bool taken) {
     return Container(
