@@ -1,3 +1,4 @@
+// ignore: file_names
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -6,7 +7,7 @@ import 'dart:math';
 class Report extends StatefulWidget {
   static const routeName = '/report';
 
-  const Report({Key? key}) : super(key: key);
+  const Report({super.key});
 
   @override
   State<Report> createState() => _ReportState();
