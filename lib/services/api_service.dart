@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  final String baseUrl = 'http://fastapi-app-production-6e30.up.railway.app';
+  final String baseUrl = 'https://fastapi-app-production-6e30.up.railway.app';
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // Helper to get the current user's ID token
@@ -17,6 +17,29 @@ class ApiService {
       print('Error getting auth token: $e');
       return null;
     }
+  }
+
+  // Helper function to convert UI values to backend-compatible values
+  String? _processGender(String gender) {
+    switch (gender.toLowerCase()) {
+      case 'male':
+        return 'male';
+      case 'female':
+        return 'female';
+      case 'other':
+        return 'other';
+      case 'not specified':
+      default:
+        return null; // Send null instead of "Not specified"
+    }
+  }
+
+  String? _processBloodType(String bloodType) {
+    final validTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+    if (validTypes.contains(bloodType)) {
+      return bloodType;
+    }
+    return null; // Send null instead of "Not specified"
   }
 
   // Fetch user profile
@@ -70,26 +93,38 @@ class ApiService {
     try {
       final token = await _getAuthToken();
 
+      // Process the data to match backend expectations
+      final Map<String, dynamic> profileData = {
+        "name": name.trim().isEmpty ? null : name,
+        "age": age.trim().isEmpty || age == 'Not specified' ? null : age,
+        "address": address.trim().isEmpty || address == 'Not specified' ? null : address,
+        "phone": phone.trim().isEmpty || phone == 'Not specified' ? null : phone,
+        "date_of_birth": dateOfBirth.trim().isEmpty || dateOfBirth == 'Not specified' ? null : dateOfBirth,
+        "allergies": allergies?.trim().isEmpty == true || allergies == 'None' ? null : allergies,
+        "medical_conditions": medicalConditions?.trim().isEmpty == true || medicalConditions == 'None' ? null : medicalConditions,
+        "emergency_contact": emergencyContact.trim().isEmpty || emergencyContact == 'Not specified' ? null : emergencyContact,
+      };
+
+      // Handle enum fields separately
+      final processedGender = _processGender(gender);
+      final processedBloodType = _processBloodType(bloodType);
+
+      if (processedGender != null) {
+        profileData["gender"] = processedGender;
+      }
+
+      if (processedBloodType != null) {
+        profileData["blood_type"] = processedBloodType;
+      }
+
       final response = await http.post(
         Uri.parse('$baseUrl/profile'),
         headers: {
           'Content-Type': 'application/json',
           if (token != null) 'Authorization': 'Bearer $token',
-          // Alternative: Send user ID in headers instead
           'X-User-ID': user.uid,
         },
-        body: jsonEncode({
-          "name": name,
-          "age": age,
-          "address": address,
-          "gender": gender,
-          "phone": phone,
-          "date_of_birth": dateOfBirth,
-          "blood_type": bloodType,
-          "allergies": allergies,
-          "medical_conditions": medicalConditions,
-          "emergency_contact": emergencyContact,
-        }),
+        body: jsonEncode(profileData),
       );
 
       print('Response status: ${response.statusCode}');
