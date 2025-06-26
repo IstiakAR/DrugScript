@@ -237,12 +237,17 @@ class _CreatePrescriptionState extends State<CreatePrescription> {
       appBar: AppBar(
         
         title: const Text(
-          'Create Prescription',
+          'Add Prescription',
           style: TextStyle(
-            fontSize: 26,
+            fontSize: 20,
             fontWeight: FontWeight.bold,
             color: Color.fromARGB(255, 47, 47, 49),
           ),
+        ),
+
+        leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.pushReplacementNamed(context, '/homePage'),
         ),
 
         actions: [
