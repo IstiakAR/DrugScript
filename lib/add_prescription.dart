@@ -270,7 +270,12 @@ class _AddPrescriptionState extends State<AddPrescription> {
         base64Image = base64Encode(imageBytes);
       }
 
-      final List<String> medicineSlugs = selectedMedicines.map((medicine) => medicine['slug'] as String).toList();
+      final List<String> medicineSlugs = [];
+      for (var medicine in selectedMedicines) {
+        if (medicine['slug'] != null && medicine['slug'] is String) {
+          medicineSlugs.add(medicine['slug']);
+        }
+      }
 
       print('Selected Medicines Slugs: $medicineSlugs');
 
