@@ -3,6 +3,7 @@ import 'package:drugscript/homepage.dart';
 import 'package:drugscript/medicine_search.dart';
 import 'package:drugscript/profile.dart';
 import 'package:drugscript/wrapper.dart';
+import 'package:drugscript/Report.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
@@ -23,7 +24,6 @@ class MyApp extends StatelessWidget {
       title: 'DrugScript',
       debugShowCheckedModeBanner: false,
 
-
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
@@ -36,6 +36,7 @@ class MyApp extends StatelessWidget {
         '/medicineSearch': (context) => const MedicineSearchApp(),
         '/profilePage': (context) => const Profile(),
         '/createPrescription': (context) => const AddPrescription(),
+        '/report': (context) =>const Report(),
       },
     );
   }

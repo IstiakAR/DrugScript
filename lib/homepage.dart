@@ -92,7 +92,7 @@ class _HomePageState extends State<HomePage> {
                   _buildActionCard('Add Prescription', Icons.add_circle, Color.fromARGB(255, 109, 205, 163), '/createPrescription'),
                   _buildActionCard('View Prescriptions', Icons.description, Color.fromARGB(255, 51,184,196), '/emptyPage'),
                   _buildActionCard('Scan QR', Icons.qr_code_scanner, Color.fromARGB(255, 47, 47, 49), '/emptyPage'),
-                  _buildActionCard('My Reports', Icons.analytics, Color.fromARGB(255, 159, 140, 140), '/emptyPage'),
+                  _buildActionCard('My Reports', Icons.analytics, Color.fromARGB(255, 159, 140, 140), '/report'),
                   _buildActionCard('Shared With Me', Icons.share_outlined,Color.fromARGB(255, 55, 93, 175), '/emptyPage'),
                 ],
               ),

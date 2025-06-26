@@ -112,7 +112,7 @@ class _AddPrescriptionState extends State<AddPrescription> {
               ),
               SizedBox(height: 20),
               // Cancel button
-              Container(
+              SizedBox(
                 width: double.infinity,
                 child: TextButton(
                   onPressed: () => Navigator.pop(context),
