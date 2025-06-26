@@ -30,10 +30,6 @@ class _LoginState extends State<Login>{
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Login'),
-        centerTitle: true,
-      ),
       body: Center(
         child: SingleChildScrollView(
           child: Container(
@@ -70,10 +66,10 @@ class _LoginState extends State<Login>{
                   style: theme.textTheme.bodyMedium,
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 100),
+                const SizedBox(height: 50),
                 SizedBox(
                   width: double.infinity,
-                  height: 55,
+                  height: 40,
                   child: OutlinedButton.icon(
                     onPressed: () {
                       login();
@@ -85,7 +81,7 @@ class _LoginState extends State<Login>{
                     ),
                     label: const Text(
                       'Continue with Google',
-                      style: TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 17),
+                      style: TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontSize: 15),
                     )
                   ),
                 ),
