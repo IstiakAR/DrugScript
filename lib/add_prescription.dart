@@ -18,12 +18,60 @@ class _AddPrescriptionState extends State<AddPrescription> {
   // Controllers for text fields
   final TextEditingController _doctorNameController = TextEditingController();
   final TextEditingController _contactController = TextEditingController();
+
   
 
   // State variables
   List<Map<String, dynamic>> selectedMedicines = [];
   File? prescriptionImage;
   bool isLoading = false;
+  DateTime? _selectedDate;
+  String? _selectedDiagnosis;
+
+  final List<String> _diagnosis = [
+    'Cardiovascular',
+    'Respiratory ',
+    'Digestive',
+    'Nervous',
+    'Musculoskeletal',
+    'Integumentary',
+    'Endocrine',
+    'Urinary',
+    'Reproductive',
+    'Immune',
+    'Psychological',
+    'Allergic',
+    'Infectious',
+    'Cancer',
+    'Neurological',
+    'Head & Neck',
+    'Thorax',
+    'Abdomen',
+    'Pelvis',
+    'Diabetes',
+    'Hypertension',
+    'Asthma',
+    'Arthritis',
+    'Anemia',
+    'Obesity',
+    'Thyroid',
+    'Gastrointestinal',
+    'Kidney',
+    'Liver',
+    'Skin',
+    'Eye',
+    'Ear',
+    'Autoimmune',
+    'Genetic',
+    'Metabolic',
+    'Vascular',
+    'Blood',
+    'Hormonal',
+    'Neurological Disorders',
+    'Other',
+  ];
+
+    
 
 
   // Function to handle image picking
@@ -182,57 +230,6 @@ class _AddPrescriptionState extends State<AddPrescription> {
     });
   }
 
-  // Create prescription
-  // Future<void> _createPrescription() async {
-  //   if (_doctorNameController.text.isEmpty) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text('Please enter doctor name')),
-  //     );
-  //     return;
-  //   }
-
-  //   if (selectedMedicines.isEmpty) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text('Please add at least one medicine')),
-  //     );
-  //     return;
-  //   }
-
-  //   setState(() {
-  //     isLoading = true;
-  //   });
-
-  //   //here implement the logic to save the prescription to the database or server
-
-  //   print(_doctorNameController.text);
-  //   print(_contactController.text);
-  //   print(selectedMedicines);
-  //   print(prescriptionImage?.path ?? 'No image selected');
-
-  //   // 
-
-    
-  //   await Future.delayed(const Duration(seconds: 2)); // Simulate network delay
-    
-  //   setState(() {
-  //     isLoading = false;
-  //   });
-    
-  //   // Show success message
-  //   if (mounted) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(content: Text('Prescription created successfully')),
-  //     );
-      
-  //     // Reset form
-  //     _doctorNameController.clear();
-  //     _contactController.clear();
-  //     setState(() {
-  //       selectedMedicines = [];
-  //       prescriptionImage = null;
-  //     });
-  //   }
-  // }
 
   Future<String?> _getAuthToken() async {
     User? user = FirebaseAuth.instance.currentUser;
@@ -250,12 +247,30 @@ class _AddPrescriptionState extends State<AddPrescription> {
       return;
     }
 
+    if(_selectedDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a prescription date')),
+      );
+      return;
+    }
+
+    if (_selectedDiagnosis == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a diagnosis')),
+      );
+      return;
+    }
+
     if (selectedMedicines.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please add at least one medicine')),
       );
       return;
     }
+
+
+
+
 
     setState(() {
       isLoading = true;
@@ -285,6 +300,11 @@ class _AddPrescriptionState extends State<AddPrescription> {
         'contact': _contactController.text,
         'medicines': medicineSlugs, // Make sure this is a list of maps/dictionaries
         'image': base64Image,
+        'date' : _selectedDate != null
+            ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
+            : null,
+        'diagnosis': _selectedDiagnosis,
+        'created_by': FirebaseAuth.instance.currentUser?.uid,
       };
 
       // Get your authentication token
@@ -315,10 +335,18 @@ class _AddPrescriptionState extends State<AddPrescription> {
           // Reset form
           _doctorNameController.clear();
           _contactController.clear();
+          
+          FocusScope.of(context).unfocus(); 
+
+          Navigator.pushReplacementNamed(context, '/homePage');
+
+
           setState(() {
             selectedMedicines = [];
             prescriptionImage = null;
           });
+
+
         }
       } else {
         // Error
@@ -433,12 +461,107 @@ class _AddPrescriptionState extends State<AddPrescription> {
               ),
               keyboardType: TextInputType.phone,
             ),
+            const SizedBox(height: 8),
+
+            // Date selection
+            const Text(
+              'Prescription Date',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            GestureDetector(
+              onTap: () async {
+                final DateTime? pickedDate = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime.now().add(const Duration(days: 365)),
+                  builder: (context, child) {
+                    return Theme(
+                      data: Theme.of(context).copyWith(
+                        colorScheme: const ColorScheme.light(
+                          primary: Color.fromARGB(255, 47, 47, 49),
+                        ),
+                      ),
+                      child: child!,
+                    );
+                  },
+                );
+                if (pickedDate != null) {
+                  setState(() {
+                    _selectedDate = pickedDate;
+                  });
+                }
+              },
+              child: AbsorbPointer(
+                child: TextField(
+                  controller: TextEditingController(
+                    text: _selectedDate != null
+                        ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
+                        : '',
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Select Date',
+                    labelStyle: TextStyle(
+                      color: const Color.fromARGB(255, 51, 59, 70),
+                    ),
+                    hintText: 'DD/MM/YYYY',
+                    prefixIcon: const Icon(Icons.calendar_today_outlined),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+            ),
 
 
-            const Divider(
-              color: Colors.grey,
-              thickness: 1,
-              height: 20,
+            const SizedBox(height: 8),
+
+            // Diagnosis selection
+            const Text(
+              'Diagnosis',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // Dropdown for diagnosis selection
+            Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: DropdownButtonFormField<String>(
+                decoration: InputDecoration(
+                  contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                  border: InputBorder.none,
+                ),
+                hint: Text('Select Diagnosis'),
+                isExpanded: true,
+                value: _selectedDiagnosis,
+                icon: Icon(Icons.arrow_drop_down_circle_outlined),
+                elevation: 26,
+                style: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedDiagnosis = newValue;
+                  });
+                },
+                items: _diagnosis.map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+              ),
             ),
 
             const SizedBox(height: 10),
@@ -460,24 +583,24 @@ class _AddPrescriptionState extends State<AddPrescription> {
               margin: const EdgeInsets.symmetric(vertical: 0),
 
               child: Material(
-                color: const Color.fromARGB(0, 255, 255, 255),
+                color: const Color.fromARGB(255, 47, 47, 49),
                 child: InkWell(
                   onTap: _showImageSourceOptions,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(0),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 6),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: const Color.fromARGB(255, 227, 248, 255).withOpacity(0.5),
+                            color: const Color.fromARGB(255, 47, 47, 49),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.camera_rear, color: Color.fromARGB(255, 255, 255, 255), size: 24),
+                          child: const Icon(Icons.camera_alt_outlined, color: Color.fromARGB(255, 255, 255, 255), size: 30),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 15),
                         const Text(
                           'Add Original Prescription',
                           style: TextStyle(
@@ -542,41 +665,34 @@ class _AddPrescriptionState extends State<AddPrescription> {
               ),
             ],
             
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             
             // Add medicine button
             Container(
               decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 47, 47, 49),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    spreadRadius: 1,
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                color: const Color.fromARGB(255, 0, 0, 0),
+                borderRadius: BorderRadius.circular(0),
               ),
+
               margin: const EdgeInsets.symmetric(vertical: 0),
 
               child: Material(
-                color: const Color.fromARGB(0, 255, 255, 255),
+                color: const Color.fromARGB(255, 47, 47, 49),
                 child: InkWell(
                   onTap: _navigateToMedicineSearch,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(0),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(6),
+                          padding: const EdgeInsets.all(2),
                           decoration: BoxDecoration(
-                            color: const Color.fromARGB(255, 227, 248, 255).withOpacity(0.5),
+                            color: const Color.fromARGB(255, 47, 47, 49),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.medication, color: Color.fromARGB(255, 255, 255, 255), size: 24),
+                          child: const Icon(Icons.medication, color: Color.fromARGB(255, 255, 255, 255), size: 30),
                         ),
                         const SizedBox(width: 12),
                         const Text(
@@ -656,7 +772,7 @@ class _AddPrescriptionState extends State<AddPrescription> {
                           ),
                           const SizedBox(width: 16),
                           IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
+                            icon: const Icon(Icons.delete, color: Color.fromARGB(255, 255, 106, 106)),
                             onPressed: () => _removeMedicine(index),
                           ),
                         ],
