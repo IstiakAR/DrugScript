@@ -21,6 +21,7 @@ class _ProfileState extends State<Profile> {
   final AuthService _authService = AuthService();
 
   bool _isLoading = false;
+  bool _isBackgroundLoading = false;  // Added for background loading
   bool _isEditing = false;
   
   // Initialize controllers with default values
@@ -39,6 +40,9 @@ class _ProfileState extends State<Profile> {
   void initState() {
     super.initState();
     _initializeUserData();
+    
+    // Load the page immediately and fetch data in background
+    _loadProfileDataInBackground();
   }
 
   void _initializeUserData() {
@@ -51,6 +55,72 @@ class _ProfileState extends State<Profile> {
     if (!AppConstants.bloodTypes.contains(_bloodTypeController.text)) {
       _bloodTypeController.text = 'Not specified';
     }
+  }
+  
+  // New method to load data in background
+  void _loadProfileDataInBackground() async {
+    // Load cached data first if available (should be almost instant)
+    await _loadCachedProfile();
+    
+    // Then fetch fresh data from API without blocking UI
+    if (mounted) {
+      _fetchUserProfileInBackground();
+    }
+  }
+  
+  // Load cached profile data
+  Future<void> _loadCachedProfile() async {
+    try {
+      final cachedData = await _apiService.loadCachedProfileOnly();
+      if (cachedData != null && mounted) {
+        setState(() {
+          _updateControllers(cachedData);
+        });
+      }
+    } catch (e) {
+      print('Error loading cached profile: $e');
+    }
+  }
+  
+  // Fetch fresh data in background
+  Future<void> _fetchUserProfileInBackground() async {
+    if (mounted) {
+      setState(() {
+        _isBackgroundLoading = true;
+      });
+    }
+
+    try {
+      final userData = await _apiService.getUserProfile();
+      
+      if (userData != null && mounted) {
+        setState(() {
+          _updateControllers(userData);
+        });
+      }
+    } catch (e) {
+      print('Error fetching user profile: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isBackgroundLoading = false;
+        });
+      }
+    }
+  }
+  
+  // Helper method to update all controllers
+  void _updateControllers(Map<String, dynamic> userData) {
+    _nameController.text = userData['name'] ?? _nameController.text;
+    _bloodTypeController.text = userData['blood_type'] ?? _bloodTypeController.text;
+    _allergiesController.text = userData['allergies'] ?? _allergiesController.text;
+    _emergencyContactController.text = userData['emergency_contact'] ?? _emergencyContactController.text;
+    _medicalConditionsController.text = userData['medical_conditions'] ?? _medicalConditionsController.text;
+    _ageController.text = userData['age'] ?? _ageController.text;
+    _addressController.text = userData['address'] ?? _addressController.text;
+    _phoneController.text = userData['phone'] ?? _phoneController.text;
+    _genderController.text = userData['gender'] ?? _genderController.text;
+    _dobController.text = userData['date_of_birth'] ?? _dobController.text;
   }
   
   @override
@@ -168,6 +238,22 @@ class _ProfileState extends State<Profile> {
       appBar: AppBar(
         title: const Text('Patient Profile'),
         actions: [
+          // Show refresh button when not editing
+          if (!_isEditing && !_isBackgroundLoading) 
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _fetchUserProfileInBackground,
+              tooltip: 'Refresh',
+            ),
+          if (!_isEditing && _isBackgroundLoading)
+            Container(
+              padding: const EdgeInsets.all(10),
+              child: const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
           if (_isEditing) ...[
             IconButton(
               icon: const Icon(Icons.close),
@@ -198,125 +284,124 @@ class _ProfileState extends State<Profile> {
         ),
       ),
 
-      body: _isLoading 
-        ? const Center(child: CircularProgressIndicator())
-        : SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // User info section
-              Container(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 30,
-                      backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
-                      child: photoUrl == null ? const Icon(Icons.person, size: 30) : null,
+      // Don't block the UI with a loading indicator - show content immediately
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // User info section
+            Container(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
+                    child: photoUrl == null ? const Icon(Icons.person, size: 30) : null,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _isEditing 
+                          ? TextField(
+                              controller: _nameController,
+                              decoration: const InputDecoration(labelText: 'Name'),
+                            )
+                          : Text(
+                              _nameController.text,
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                        Text(
+                          user?.email ?? 'No Email',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _isEditing 
-                            ? TextField(
-                                controller: _nameController,
-                                decoration: const InputDecoration(labelText: 'Name'),
-                              )
-                            : Text(
-                                _nameController.text,
-                                style: Theme.of(context).textTheme.titleLarge,
-                              ),
-                          Text(
-                            user?.email ?? 'No Email',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
+            ),
 
-              const Divider(),
+            const Divider(),
 
-              // Personal Information section
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Personal Information',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+            // Personal Information section
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Personal Information',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
-                    const SizedBox(height: 16),
-                    
-                    _buildInfoField('Age', _ageController, Icons.calendar_today,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      keyboardType: TextInputType.number,
-                    ),
-                    _buildInfoField('Gender', _genderController, Icons.person_outline),
-                    _buildInfoField('Address', _addressController, Icons.home),
-                    _buildInfoField('Phone Number', _phoneController, Icons.phone,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      keyboardType: TextInputType.phone,
-                    ),
-                    
-                    // Date of Birth with special handling
-                    _isEditing 
-                      ? GestureDetector(
-                          onTap: () => _selectDate(context),
-                          child: AbsorbPointer(
-                            child: TextField(
-                              controller: _dobController,
-                              decoration: const InputDecoration(
-                                labelText: 'Date of Birth',
-                                prefixIcon: Icon(Icons.cake),
-                                suffixIcon: Icon(Icons.calendar_today, size: 18),
-                              ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  _buildInfoField('Age', _ageController, Icons.calendar_today,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    keyboardType: TextInputType.number,
+                  ),
+                  _buildInfoField('Gender', _genderController, Icons.person_outline),
+                  _buildInfoField('Address', _addressController, Icons.home),
+                  _buildInfoField('Phone Number', _phoneController, Icons.phone,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    keyboardType: TextInputType.phone,
+                  ),
+                  
+                  // Date of Birth with special handling
+                  _isEditing 
+                    ? GestureDetector(
+                        onTap: () => _selectDate(context),
+                        child: AbsorbPointer(
+                          child: TextField(
+                            controller: _dobController,
+                            decoration: const InputDecoration(
+                              labelText: 'Date of Birth',
+                              prefixIcon: Icon(Icons.cake),
+                              suffixIcon: Icon(Icons.calendar_today, size: 18),
                             ),
                           ),
-                        )
-                      : ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: const Icon(Icons.cake),
-                          title: const Text('Date of Birth'),
-                          subtitle: Text(_dobController.text),
                         ),
-                  ],
-                ),
-              ),
-              
-              const Divider(),
-
-              // Medical Information section
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Medical Information',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
+                      )
+                    : ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.cake),
+                        title: const Text('Date of Birth'),
+                        subtitle: Text(_dobController.text),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    _buildInfoField('Blood Type', _bloodTypeController, Icons.bloodtype),
-                    _buildInfoField('Allergies', _allergiesController, Icons.warning_amber),
-                    _buildInfoField('Medical Conditions', _medicalConditionsController, Icons.medical_services),
-                    _buildInfoField('Emergency Contact', _emergencyContactController, Icons.contact_phone),
-                  ],
-                ),
+                ],
               ),
-            ],
-          ),
+            ),
+            
+            const Divider(),
+
+            // Medical Information section
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Medical Information',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  _buildInfoField('Blood Type', _bloodTypeController, Icons.bloodtype),
+                  _buildInfoField('Allergies', _allergiesController, Icons.warning_amber),
+                  _buildInfoField('Medical Conditions', _medicalConditionsController, Icons.medical_services),
+                  _buildInfoField('Emergency Contact', _emergencyContactController, Icons.contact_phone),
+                ],
+              ),
+            ),
+          ],
         ),
+      ),
     );
   }
   
@@ -354,7 +439,8 @@ class _ProfileState extends State<Profile> {
             )
           : _isEditing && label == 'Gender'
             ? DropdownButtonFormField<String>(
-                value: controller.text,
+                // Normalize the value from controller to ensure it matches dropdown options
+                value: _normalizeGenderValue(controller.text),
                 items: AppConstants.genderOptions
                   .map((gender) => DropdownMenuItem(value: gender, child: Text(gender)))
                   .toList(),
@@ -377,5 +463,21 @@ class _ProfileState extends State<Profile> {
                 subtitle: Text(controller.text),
               ),
     );
+  }
+  
+  // Add this helper method to normalize gender values
+  String _normalizeGenderValue(String value) {
+    // Convert to lowercase and check
+    final lowercaseValue = value.toLowerCase().trim();
+    
+    // Find matching gender option
+    for (final option in AppConstants.genderOptions) {
+      if (option.toLowerCase() == lowercaseValue) {
+        return option; // Return the properly formatted option
+      }
+    }
+    
+    // If no match, return the default value
+    return AppConstants.genderOptions.first; // 'Not specified' or whatever is first in the list
   }
 }

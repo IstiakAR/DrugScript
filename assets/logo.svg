@@ -1,0 +1,42 @@
+<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="orange-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F59E0B;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#EA580C;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="purple-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#A855F7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="blue-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1D4ED8;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:0" />
+    </radialGradient>
+  </defs>
+  
+  <!-- Top right organic shape (orange) with rounded corners -->
+  <path d="M52 18 Q70 18 76 36 Q76 44 70 44 Q58 44 50 34 Q50 26 52 18 Z" fill="url(#orange-gradient)" rx="6"/>
+  
+  <!-- Bottom left organic shape (orange) with rounded corners -->
+  <path d="M44 78 Q26 78 20 60 Q20 52 26 52 Q38 52 46 62 Q46 70 44 78 Z" fill="url(#orange-gradient)" rx="6"/>
+  
+  <!-- Top left organic shape (purple) with rounded corners -->
+  <path d="M20 44 Q20 26 38 20 Q46 20 46 26 Q46 38 36 46 Q28 46 20 44 Z" fill="url(#purple-gradient)" rx="6"/>
+  
+  <!-- Bottom right organic shape (purple) with rounded corners -->
+  <path d="M76 52 Q76 70 58 76 Q50 76 50 70 Q50 58 60 50 Q68 50 76 52 Z" fill="url(#purple-gradient)" rx="6"/>
+  
+  <!-- Center glow effect -->
+  <circle cx="48" cy="48" r="20" fill="url(#glow)"/>
+  
+  <!-- Center white cross area -->
+  <circle cx="48" cy="48" r="16" fill="#FFFFFF"/>
+  
+  <!-- Medical cross -->
+  <rect x="46" y="40" width="4" height="16" rx="2" fill="url(#blue-gradient)"/>
+  <rect x="40" y="46" width="16" height="4" rx="2" fill="url(#blue-gradient)"/>
+</svg>
