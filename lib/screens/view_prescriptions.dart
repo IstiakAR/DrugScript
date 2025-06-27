@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:qr_flutter/qr_flutter.dart';
 
 class ViewPrescription extends StatefulWidget {
   const ViewPrescription({super.key});
@@ -12,16 +13,14 @@ class ViewPrescription extends StatefulWidget {
 }
 
 class _ViewPrescriptionState extends State<ViewPrescription> {
-
   List<Map<String, dynamic>> _prescriptions = [];
-
+  bool _isLoading = false; // Add this
 
   @override
   void initState() {
     super.initState();
     _fetchPrescriptionData();
   }
-
 
   Future<String?> _getAuthToken() async {
     User? user = FirebaseAuth.instance.currentUser;
@@ -32,6 +31,7 @@ class _ViewPrescriptionState extends State<ViewPrescription> {
   }
 
   Future<void> _fetchPrescriptionData() async {
+    setState(() => _isLoading = true); // Start loading
     try {
       final String? authToken = await _getAuthToken();
 
@@ -46,7 +46,6 @@ class _ViewPrescriptionState extends State<ViewPrescription> {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // Success
         final data = jsonDecode(response.body);
 
         setState(() {
@@ -61,23 +60,21 @@ class _ViewPrescriptionState extends State<ViewPrescription> {
           );
         }
       } else {
-        // Error
         throw Exception(
           'Failed to create prescription. Status: ${response.statusCode}, Body: ${response.body}',
         );
       }
     } catch (e) {
       print('Error fetching prescription data: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false); // Stop loading
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // backgroundColor: Colors.white,
-
       appBar: AppBar(
-        // backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         title: const Text(
           'View Prescription',
           style: TextStyle(
@@ -86,13 +83,27 @@ class _ViewPrescriptionState extends State<ViewPrescription> {
             color: Color.fromARGB(255, 0, 0, 0),
           ),
         ),
-        // iconTheme: const IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pushReplacementNamed(context, '/homePage'),
         ),
+        actions: [
+          _isLoading
+              ? Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                )
+              : IconButton(
+                  icon: const Icon(Icons.refresh),
+                  tooltip: 'Refresh',
+                  onPressed: _fetchPrescriptionData,
+                ),
+        ],
       ),
-
       body: Column(
         children: [
           Expanded(
@@ -169,12 +180,35 @@ class _ViewPrescriptionState extends State<ViewPrescription> {
                                   style: const TextStyle(color: Colors.black87),
                                 ),
                                 const SizedBox(height: 8),
-                                Text(
-                                  'ID: ${prescription['prescription_id']}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.black54,
-                                  ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'ID: ${prescription['prescription_id']}',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.black54,
+                                      ),
+                                    ),
+                                    // Generate QR button
+                                    TextButton.icon(
+                                      icon: const Icon(Icons.qr_code, color: Colors.black),
+                                      label: const Text(
+                                        "Generate QR",
+                                        style: TextStyle(color: Colors.black),
+                                      ),
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => QrPage(
+                                              prescriptionId: prescription['prescription_id'].toString(),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -185,6 +219,28 @@ class _ViewPrescriptionState extends State<ViewPrescription> {
                   ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// QR Page to show the QR code for a prescription
+class QrPage extends StatelessWidget {
+  final String prescriptionId;
+  const QrPage({super.key, required this.prescriptionId});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Prescription QR Code'),
+      ),
+      body: Center(
+        child: QrImageView(
+          data: prescriptionId,
+          version: QrVersions.auto,
+          size: 240.0,
+        ),
       ),
     );
   }

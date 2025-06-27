@@ -150,18 +150,10 @@ class ApiService {
         "allergies": allergies?.trim().isEmpty == true || allergies == 'None' ? null : allergies,
         "medical_conditions": medicalConditions?.trim().isEmpty == true || medicalConditions == 'None' ? null : medicalConditions,
         "emergency_contact": emergencyContact.trim().isEmpty || emergencyContact == 'Not specified' ? null : emergencyContact,
+        "gender": gender, // <-- Add this
+        "blood_type": bloodType, // <-- And this
       };
 
-      final processedGender = _processGender(gender);
-      final processedBloodType = _processBloodType(bloodType);
-
-      if (processedGender != null) {
-        profileData["gender"] = processedGender;
-      }
-
-      if (processedBloodType != null) {
-        profileData["blood_type"] = processedBloodType;
-      }
 
       // First check if the profile exists
       final existingProfile = await getUserProfile();
@@ -193,6 +185,10 @@ class ApiService {
 
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
+      // Add this for debugging
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        print('Profile update failed. Data sent: $profileData');
+      }
 
       final success = response.statusCode == 200 || response.statusCode == 201;
       
@@ -331,27 +327,5 @@ class ApiService {
       print('Error creating prescription: $e');
       return false;
     }
-  }
-
-  // Helper function to convert UI values to backend-compatible values
-  String? _processGender(String gender) {
-    switch (gender.toLowerCase()) {
-      case 'male':
-        return 'male';
-      case 'female':
-        return 'female';
-      case 'other':
-        return 'other';
-      case 'not specified':
-      default:
-        return null;
-    }
-  }
-
-  String? _processBloodType(String bloodType) {
-    if (AppConstants.bloodTypes.contains(bloodType) && bloodType != 'Not specified') {
-      return bloodType;
-    }
-    return null;
   }
 }

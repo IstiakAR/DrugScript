@@ -7,6 +7,7 @@ import 'package:drugscript/screens/wrapper.dart';
 import 'package:drugscript/screens/report.dart';
 import 'package:drugscript/theme/app_theme.dart';
 import 'package:drugscript/screens/splash_screen.dart';
+import 'package:drugscript/screens/scan_qr_page.dart';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -43,6 +44,7 @@ class MyApp extends StatelessWidget {
         '/createPrescription': (context) => const AddPrescription(),
         '/report': (context) => const Report(),
         '/viewPrescriptions': (context) => const ViewPrescription(),
+        '/scanQrPage': (context) => const ScanQrPage(),
       },
     );
   }

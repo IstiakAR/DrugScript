@@ -14,12 +14,12 @@ class AppConstants {
   
   // Blood Types
   static const List<String> bloodTypes = [
-    'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Not specified'
+    'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'
   ];
   
   // Gender Options
   static const List<String> genderOptions = [
-    'Male', 'Female', 'Prefer not to say', 'Not specified'
+    'Male', 'Female', 'Prefer not to say'
   ];
   
   // Diagnosis Options
