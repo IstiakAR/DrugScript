@@ -1,4 +1,7 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:convert';
+import 'package:drugscript/screens/medicine_detail.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -21,7 +24,7 @@ class _PrescriptionDetailsState extends State<PrescriptionDetails> {
   // Updated color scheme
   final Color primaryColor = const Color.fromARGB(255, 217, 217, 217);
   final Color accentColor = const Color(0xFFB0E5B8);
-  final Color textColor = const Color(0xFF333333);
+  final Color textColor = const Color.fromARGB(255, 0, 0, 0);
 
   @override
   void initState() {
@@ -75,6 +78,32 @@ class _PrescriptionDetailsState extends State<PrescriptionDetails> {
     }
   }
 
+  Future<dynamic> _fetchMedicineDetails(String slug) async {
+    try {
+      final String? authToken = await _getAuthToken();
+      final response = await http.get(
+        Uri.parse(
+          'https://fastapi-app-production-6e30.up.railway.app/medicine/$slug',
+        ),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $authToken',
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        return data;
+      } else {
+        throw Exception(
+          'Failed to fetch medicine details. Status code: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      print('Error fetching medicine details: $e');
+      return null; // Return null or handle the error as needed
+    }
+  }
 
   Widget _buildSectionCard(String title, Widget content) {
     return Container(
@@ -122,7 +151,10 @@ class _PrescriptionDetailsState extends State<PrescriptionDetails> {
             width: 130,
             child: Text(
               label,
-              style: const TextStyle(fontSize: 16, color: Color.fromARGB(255, 0, 0, 0)),
+              style: const TextStyle(
+                fontSize: 16,
+                color: Color.fromARGB(255, 0, 0, 0),
+              ),
             ),
           ),
           Expanded(
@@ -140,25 +172,10 @@ class _PrescriptionDetailsState extends State<PrescriptionDetails> {
     );
   }
 
-  Widget _buildMedicinesList() {
-    final medicines = _prescriptionData['medicines'];
-    if (medicines == null || medicines is! List || medicines.isEmpty) {
-      return const Text('No medicines prescribed.');
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        for (var medicine in medicines)
-          Text('• $medicine', style: const TextStyle(fontSize: 16)),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-
         title: Text(
           'Diagnosis by Dr. ${_prescriptionData['doctor_name'] ?? ''}',
           style: TextStyle(
@@ -169,7 +186,10 @@ class _PrescriptionDetailsState extends State<PrescriptionDetails> {
         ),
 
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color.fromARGB(255, 0, 0, 0)),
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Color.fromARGB(255, 0, 0, 0),
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -232,28 +252,34 @@ class _PrescriptionDetailsState extends State<PrescriptionDetails> {
                       ),
                     ),
 
-                    
-                    if (_prescriptionData['image'] != null && _prescriptionData['image'].toString().isNotEmpty)
+                    if (_prescriptionData['image'] != null &&
+                        _prescriptionData['image'].toString().isNotEmpty)
                       _buildSectionCard(
                         'Prescription Image',
                         GestureDetector(
                           onTap: () {
                             showDialog(
                               context: context,
-                              builder: (_) => Dialog(
-                                insetPadding: EdgeInsets.zero,
-                                backgroundColor: Colors.transparent,
-                                child: InteractiveViewer(
-                                  panEnabled: true,
-                                  minScale: 0.5,
-                                  maxScale: 4,
-                                  child: Image.memory(
-                                    base64Decode(_prescriptionData['image'].toString()),
-                                    fit: BoxFit.contain,
-                                    errorBuilder: (ctx, err, stack) => const Text('Failed to load image'),
+                              builder:
+                                  (_) => Dialog(
+                                    insetPadding: EdgeInsets.zero,
+                                    backgroundColor: Colors.transparent,
+                                    child: InteractiveViewer(
+                                      panEnabled: true,
+                                      minScale: 0.5,
+                                      maxScale: 4,
+                                      child: Image.memory(
+                                        base64Decode(
+                                          _prescriptionData['image'].toString(),
+                                        ),
+                                        fit: BoxFit.contain,
+                                        errorBuilder:
+                                            (ctx, err, stack) => const Text(
+                                              'Failed to load image',
+                                            ),
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
                             );
                           },
                           child: ClipRRect(
@@ -262,55 +288,99 @@ class _PrescriptionDetailsState extends State<PrescriptionDetails> {
                               height: MediaQuery.of(context).size.height * 0.2,
                               width: double.infinity,
                               child: Image.memory(
-                                base64Decode(_prescriptionData['image'].toString()),
+                                base64Decode(
+                                  _prescriptionData['image'].toString(),
+                                ),
                                 fit: BoxFit.cover,
-                                errorBuilder: (ctx, err, stack) => const Text('Failed to load image'),
+                                errorBuilder:
+                                    (ctx, err, stack) =>
+                                        const Text('Failed to load image'),
                               ),
                             ),
                           ),
                         ),
                       ),
-
-
                     _buildSectionCard(
                       'Medicines',
-                      InkWell(
-                        onTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (_) => AlertDialog(
-                              title: const Text('Prescribed Medicines'),
-                              content: SingleChildScrollView(
-                                child: _buildMedicinesList(),
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(context).pop(),
-                                  child: const Text('Close'),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (_prescriptionData['medicines'] is List &&
+                              (_prescriptionData['medicines'] as List)
+                                  .isNotEmpty)
+                            for (var medicine in _prescriptionData['medicines'])
+                              Card(
+                                margin: EdgeInsets.only(bottom: 8.0),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(2.0),
                                 ),
-                              ],
+                                child: InkWell(
+                                  splashColor: Colors.grey.withOpacity(0.1),
+                                  highlightColor: Colors.grey.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(2.0),
+                                  onTap: () {
+                                    _fetchMedicineDetails(medicine).then((
+                                      medicineDetails,
+                                    ) {
+                                      if (!mounted) return;
+                                      if (medicineDetails != null) {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder:
+                                                (context) => MedicineDetailPage(
+                                                  medicine: medicineDetails,
+                                                ),
+                                          ),
+                                        );
+                                      } else {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              'Failed to load details for $medicine',
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    });
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.medication_outlined,
+                                          color: textColor,
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: Text(
+                                            medicine,
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                        Icon(
+                                          Icons.arrow_forward_ios,
+                                          size: 16,
+                                          color: textColor,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              )
+                          else
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 8.0),
+                              child: Text('No medicines prescribed.'),
                             ),
-                          );
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                          child: Row(
-                            children: [
-                              Icon(Icons.medical_services, color: accentColor),
-                              const SizedBox(width: 8),
-                              Text(
-                                'View Medicines',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                  color: textColor,
-                                ),
-                              ),
-                              const Spacer(),
-                              Icon(Icons.arrow_forward_ios, size: 16, color: textColor),
-                            ],
-                          ),
-                        ),
+                        ],
                       ),
                     ),
                   ],
