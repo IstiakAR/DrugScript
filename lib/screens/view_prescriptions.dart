@@ -74,10 +74,10 @@ class _ViewPrescriptionState extends State<ViewPrescription> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      // backgroundColor: Colors.white,
 
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+        // backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         title: const Text(
           'View Prescription',
           style: TextStyle(
@@ -86,7 +86,7 @@ class _ViewPrescriptionState extends State<ViewPrescription> {
             color: Color.fromARGB(255, 0, 0, 0),
           ),
         ),
-        iconTheme: const IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
+        // iconTheme: const IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pushReplacementNamed(context, '/homePage'),

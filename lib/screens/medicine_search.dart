@@ -77,165 +77,158 @@ class _MedicineSearchAppState extends State<MedicineSearchApp> {
           onPressed: () => Navigator.pop(context),
         ),
       ) : null,
-      body: Container(
-        decoration: BoxDecoration(
-          color: Colors.grey[200]
-        ),
-        
-        child: SafeArea(
-          child: Column(
-            children: [
-
-
-              if (!widget.selectionMode) // Show this only in regular mode
-              Padding(
-                padding: const EdgeInsets.only(left: 16.0, right: 15.0, top: 16.0),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                          color: Color.fromARGB(255, 47, 47, 49),
-                          size: 25,
-                      ),
-                      onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/homePage');
-                      },
-                      style: IconButton.styleFrom(
-                        padding: const EdgeInsets.all(8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                        elevation: 10,
-                        backgroundColor: const Color.fromARGB(255, 0, 153, 255).withOpacity(0.1)
-                      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+      
+      
+            if (!widget.selectionMode) // Show this only in regular mode
+            Padding(
+              padding: const EdgeInsets.only(left: 16.0, right: 15.0, top: 16.0),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        color: Color.fromARGB(255, 47, 47, 49),
+                        size: 25,
                     ),
-                    Expanded(
-                      child: _buildSearchField(),
+                    onPressed: () {
+                      Navigator.pushReplacementNamed(context, '/homePage');
+                    },
+                    style: IconButton.styleFrom(
+                      padding: const EdgeInsets.all(8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(100),
+                      ),
+                      elevation: 10,
                     ),
-                  ],
-                ),
-              ),
-
-
-              if (widget.selectionMode) // Different layout for selection mode
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: _buildSearchField(),
-              ),
-              SizedBox(height: 20),
-              isLoading
-                  ? Center(child: CircularProgressIndicator())
-                  : Expanded(
-                    child:
-                        searchResults.isEmpty
-                            ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.search,
-                                    size: 80,
-                                    color: Color.fromARGB(255, 64, 55, 124).withOpacity(0.5),
-                                  ),
-                                  SizedBox(height: 16),
-                                  Text(
-                                    widget.selectionMode
-                                        ? 'Search for medicines to add'
-                                        : 'Search for medicines',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      color: Color.fromARGB(255, 64, 55, 124),
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-
-                            : ListView.builder(
-                              padding: EdgeInsets.symmetric(horizontal: 16),
-                              itemCount: searchResults.length,
-                              itemBuilder: (context, index) {
-                                final medicine = searchResults[index];
-                                return Card(
-                                  margin: EdgeInsets.symmetric(vertical: 6),
-                                  elevation: 1,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: ListTile(
-                                    contentPadding: EdgeInsets.all(12),
-                                    title: Text(
-                                      medicine['medicine_name'],
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                    subtitle: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        SizedBox(height: 4),
-                                        Text(
-                                          '${medicine['generic_name']} ${medicine['strength']}',
-                                        ),
-                                        SizedBox(height: 2),
-                                        Text(
-                                          'Manufacturer: ${medicine['manufacturer_name']}',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey.shade700,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    trailing: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          '৳${medicine['price']}',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                            color: Colors.blue.shade800,
-                                          ),
-                                        ),
-                                        if (widget.selectionMode)
-                                          Padding(
-                                            padding: const EdgeInsets.only(left: 8.0),
-                                            child: Icon(
-                                              Icons.add_circle_outline,
-                                              color: Colors.green,
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-
-                                    onTap: () {
-                                      if (widget.selectionMode) {
-                                        // Return the medicine to the prescription screen
-                                        Navigator.pop(context, medicine);
-                                      } else {
-                                        // Navigate to medicine details
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => MedicineDetailPage(
-                                              medicine: medicine,
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                    },
-                                  ),
-                                );
-                              },
-                            ),
                   ),
-            ],
-          ),
+                  Expanded(
+                    child: _buildSearchField(),
+                  ),
+                ],
+              ),
+            ),
+      
+      
+            if (widget.selectionMode) // Different layout for selection mode
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: _buildSearchField(),
+            ),
+            SizedBox(height: 20),
+            isLoading
+                ? Center(child: CircularProgressIndicator())
+                : Expanded(
+                  child:
+                      searchResults.isEmpty
+                          ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.search,
+                                  size: 80,
+                                  color: Color.fromARGB(255, 64, 55, 124).withOpacity(0.5),
+                                ),
+                                SizedBox(height: 16),
+                                Text(
+                                  widget.selectionMode
+                                      ? 'Search for medicines to add'
+                                      : 'Search for medicines',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Color.fromARGB(255, 64, 55, 124),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+      
+                          : ListView.builder(
+                            padding: EdgeInsets.symmetric(horizontal: 16),
+                            itemCount: searchResults.length,
+                            itemBuilder: (context, index) {
+                              final medicine = searchResults[index];
+                              return Card(
+                                margin: EdgeInsets.symmetric(vertical: 6),
+                                elevation: 1,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: ListTile(
+                                  contentPadding: EdgeInsets.all(12),
+                                  title: Text(
+                                    medicine['medicine_name'],
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      SizedBox(height: 4),
+                                      Text(
+                                        '${medicine['generic_name']} ${medicine['strength']}',
+                                      ),
+                                      SizedBox(height: 2),
+                                      Text(
+                                        'Manufacturer: ${medicine['manufacturer_name']}',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        '৳${medicine['price']}',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.blue.shade800,
+                                        ),
+                                      ),
+                                      if (widget.selectionMode)
+                                        Padding(
+                                          padding: const EdgeInsets.only(left: 8.0),
+                                          child: Icon(
+                                            Icons.add_circle_outline,
+                                            color: Colors.green,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+      
+                                  onTap: () {
+                                    if (widget.selectionMode) {
+                                      // Return the medicine to the prescription screen
+                                      Navigator.pop(context, medicine);
+                                    } else {
+                                      // Navigate to medicine details
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => MedicineDetailPage(
+                                            medicine: medicine,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                ),
+          ],
         ),
       ),
     );
