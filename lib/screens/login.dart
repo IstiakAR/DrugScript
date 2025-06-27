@@ -60,10 +60,10 @@ class _LoginState extends State<Login> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
-                  Icons.receipt_long_rounded,
-                  size: 82,
-                  color: Color(0xFF0077FF),
+                Image.asset(
+                  'assets/logo1.png',
+                  height: 100,
+                  width: 100,
                 ),
                 const SizedBox(height: 16),
                 Text(
