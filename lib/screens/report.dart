@@ -5,7 +5,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'dart:io';
 import 'dart:math';
-import 'package:fl_chart/fl_chart.dart'; // Add this dependency
 
 class Report extends StatefulWidget {
   static const routeName = '/report';
@@ -22,12 +21,12 @@ class _ReportState extends State<Report> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String _currentDateTime = '';
   final String _currentUser = 'Clear20-22';
+  Timer? _timer;
 
   // Analytics data
-  final List<double> _vitalSigns = [98.6, 120, 80, 98, 72]; // Temperature, BP sys/dia, O2, Heart Rate
-  final List<String> _previousVisits = [];
-  final Map<String, int> _medicationFrequency = {};
-  bool _showAnalytics = false;
+  final List<Map<String, dynamic>> _vitalHistory = [];
+  final List<Map<String, dynamic>> _previousVisits = [];
+  final Map<String, dynamic> _medicationHistory = {};
 
   // final Map<String, dynamic> _randomReport = _generateRandomReport();
 
@@ -35,79 +34,142 @@ class _ReportState extends State<Report> with SingleTickerProviderStateMixin {
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _updateDateTime();
     _generateAnalyticsData();
-    
+
+    // Initialize date time
+    _updateDateTime();
+
     // Update time every second
-    Timer.periodic(const Duration(seconds: 1), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _updateDateTime();
     });
   }
 
   void _updateDateTime() {
     setState(() {
-      _currentDateTime = DateFormat('yyyy-MM-dd HH:mm:ss')
-          .format(DateTime.now().toUtc());
+      _currentDateTime = DateFormat(
+        'yyyy-MM-dd HH:mm:ss',
+      ).format(DateTime.now().toUtc());
     });
   }
 
   void _generateAnalyticsData() {
-    // Generate previous visits
     final random = Random();
     final now = DateTime.now();
-    for (int i = 0; i < 5; i++) {
-      _previousVisits.add(
-        DateFormat('yyyy-MM-dd').format(
-          now.subtract(Duration(days: random.nextInt(90))),
-        ),
-      );
-    }
-    _previousVisits.sort((a, b) => b.compareTo(a));
 
-    // Generate medication frequency
-    final medications = [
-      'Paracetamol', 'Metformin', 'Amlodipine', 
-      'Ibuprofen', 'Aspirin', 'Omeprazole'
-    ];
-    for (var med in medications) {
-      _medicationFrequency[med] = random.nextInt(50) + 1;
+    // Generate vital history
+    for (int i = 0; i < 5; i++) {
+      _vitalHistory.add({
+        'date': DateFormat(
+          'yyyy-MM-dd',
+        ).format(now.subtract(Duration(days: i * 7))),
+        'temperature': (97.0 + random.nextDouble() * 2).toStringAsFixed(1),
+        'blood_pressure':
+            '${110 + random.nextInt(20)}/${70 + random.nextInt(20)}',
+        'heart_rate': '${60 + random.nextInt(30)}',
+        'oxygen': '${95 + random.nextInt(5)}',
+      });
     }
+
+    // Generate visit history
+    for (int i = 0; i < 5; i++) {
+      _previousVisits.add({
+        'date': DateFormat(
+          'yyyy-MM-dd',
+        ).format(now.subtract(Duration(days: random.nextInt(90)))),
+        'doctor':
+            'Dr. ${['Smith', 'Johnson', 'Lee', 'Patel'][random.nextInt(4)]}',
+        'reason':
+            ['Check-up', 'Follow-up', 'Emergency', 'Consultation'][random
+                .nextInt(4)],
+        'status':
+            ['Completed', 'Pending', 'Follow-up needed'][random.nextInt(3)],
+      });
+    }
+    _previousVisits.sort((a, b) => b['date'].compareTo(a['date']));
+
+    // Generate medication history
+    _medicationHistory['current'] = [
+      {
+        'name': 'Paracetamol',
+        'dosage': '500mg',
+        'frequency': '3x daily',
+        'duration': '7 days',
+      },
+      {
+        'name': 'Vitamin C',
+        'dosage': '1000mg',
+        'frequency': '1x daily',
+        'duration': '30 days',
+      },
+    ];
+    _medicationHistory['past'] = [
+      {
+        'name': 'Amoxicillin',
+        'dosage': '250mg',
+        'frequency': '2x daily',
+        'duration': '5 days',
+        'ended': '2025-06-20',
+      },
+    ];
   }
 
-  Widget _buildVitalsChart() {
-    return AspectRatio(
-      aspectRatio: 1.5,
-      child: LineChart(
-        LineChartData(
-          gridData: FlGridData(show: false),
-          titlesData: FlTitlesData(
-            leftTitles: AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
+  Widget _buildVitalsTable() {
+    return Card(
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Vitals History',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF4A637D),
+                  ),
+                ),
+                Text(
+                  'Last updated: $_currentDateTime',
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
             ),
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                getTitlesWidget: (value, meta) {
-                  switch(value.toInt()) {
-                    case 0: return const Text('Temp');
-                    case 1: return const Text('BP');
-                    case 2: return const Text('O2');
-                    case 3: return const Text('HR');
-                    default: return const Text('');
-                  }
-                },
+            const SizedBox(height: 16),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                columnSpacing: 20,
+                headingTextStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF4A637D),
+                ),
+                columns: const [
+                  DataColumn(label: Text('Date')),
+                  DataColumn(label: Text('Temp(°F)')),
+                  DataColumn(label: Text('BP')),
+                  DataColumn(label: Text('HR')),
+                  DataColumn(label: Text('O₂%')),
+                ],
+                rows:
+                    _vitalHistory
+                        .map(
+                          (vital) => DataRow(
+                            cells: [
+                              DataCell(Text(vital['date'])),
+                              DataCell(Text(vital['temperature'])),
+                              DataCell(Text(vital['blood_pressure'])),
+                              DataCell(Text(vital['heart_rate'])),
+                              DataCell(Text(vital['oxygen'])),
+                            ],
+                          ),
+                        )
+                        .toList(),
               ),
-            ),
-          ),
-          borderData: FlBorderData(show: false),
-          lineBarsData: [
-            LineChartBarData(
-              spots: _vitalSigns.asMap().entries.map((e) {
-                return FlSpot(e.key.toDouble(), e.value);
-              }).toList(),
-              isCurved: true,
-              color: Colors.blue,
-              dotData: FlDotData(show: true),
             ),
           ],
         ),
@@ -115,149 +177,147 @@ class _ReportState extends State<Report> with SingleTickerProviderStateMixin {
     );
   }
 
-  Widget _buildAnalyticsSection() {
-    return Column(
-      children: [
-        // Vitals Trends
-        Card(
-          elevation: 4,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Vitals Trend',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _buildVitalsChart(),
-              ],
+  Widget _buildMedicationSection() {
+    return Card(
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Medication History',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF4A637D),
+              ),
             ),
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // Visit History
-        Card(
-          elevation: 4,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Previous Visits',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _previousVisits.length,
-                  itemBuilder: (context, index) {
-                    return ListTile(
-                      leading: const Icon(Icons.calendar_today),
-                      title: Text(_previousVisits[index]),
-                      trailing: Text('Visit #${_previousVisits.length - index}'),
-                    );
-                  },
-                ),
-              ],
+            const SizedBox(height: 16),
+            const Text(
+              'Current Medications',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.green,
+              ),
             ),
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // Medication Analytics
-        Card(
-          elevation: 4,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Medication Frequency',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+            const SizedBox(height: 8),
+            ..._medicationHistory['current']
+                .map<Widget>(
+                  (med) => ListTile(
+                    leading: const Icon(Icons.medication, color: Colors.blue),
+                    title: Text(med['name']),
+                    subtitle: Text('${med['dosage']} - ${med['frequency']}'),
+                    trailing: Text(med['duration']),
                   ),
-                ),
-                const SizedBox(height: 16),
-                ..._medicationFrequency.entries.map((entry) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(entry.key),
-                            Text('${entry.value} times'),
-                          ],
-                        ),
-                        LinearProgressIndicator(
-                          value: entry.value / 50,
-                          backgroundColor: Colors.grey[200],
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.blue[400]!,
-                          ),
-                        ),
-                      ],
+                )
+                .toList(),
+            const Divider(),
+            const Text(
+              'Past Medications',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ..._medicationHistory['past']
+                .map<Widget>(
+                  (med) => ListTile(
+                    leading: const Icon(
+                      Icons.medication_outlined,
+                      color: Colors.grey,
                     ),
-                  );
-                }).toList(),
-              ],
-            ),
-          ),
+                    title: Text(med['name']),
+                    subtitle: Text('${med['dosage']} - ${med['frequency']}'),
+                    trailing: Text('Ended: ${med['ended']}'),
+                  ),
+                )
+                .toList(),
+          ],
         ),
-      ],
+      ),
     );
   }
 
-  // ... [Keep existing _generateRandomReport, _pickImage, _pickMultiImages methods]
+  Widget _buildVisitHistory() {
+    return Card(
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Visit History',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF4A637D),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _previousVisits.length,
+              separatorBuilder: (_, __) => const Divider(),
+              itemBuilder: (context, index) {
+                final visit = _previousVisits[index];
+                return ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: const Color(0xFFD0E8FF),
+                    child: Text(
+                      '${index + 1}',
+                      style: const TextStyle(
+                        color: Color(0xFF4A637D),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  title: Text(visit['date']),
+                  subtitle: Text('${visit['doctor']} - ${visit['reason']}'),
+                  trailing: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color:
+                          visit['status'] == 'Completed'
+                              ? Colors.green.withOpacity(0.2)
+                              : Colors.orange.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      visit['status'],
+                      style: TextStyle(
+                        color:
+                            visit['status'] == 'Completed'
+                                ? Colors.green
+                                : Colors.orange,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    // final report = _randomReport;
-    // final statusColor = report['status'] == "Normal" ? Colors.green : Colors.orangeAccent;
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 12.0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFFD0E8FF),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.blue.withOpacity(0.25),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: IconButton(
-              icon: const Icon(
-                Icons.arrow_back,
-                color: Color.fromARGB(255, 47, 47, 49),
-              ),
-              onPressed: () => Navigator.pushReplacementNamed(context, '/homePage'),
-              splashRadius: 26,
-            ),
-          ),
-        ),
         title: Column(
           children: [
             const Text(
@@ -270,34 +330,13 @@ class _ReportState extends State<Report> with SingleTickerProviderStateMixin {
             ),
             Text(
               _currentDateTime,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 12,
-              ),
+              style: const TextStyle(color: Colors.grey, fontSize: 12),
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.analytics, color: Colors.blueGrey),
-            tooltip: "Toggle Analytics",
-            onPressed: () {
-              setState(() {
-                _showAnalytics = !_showAnalytics;
-              });
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.picture_as_pdf, color: Colors.blueGrey),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('PDF export coming soon!')),
-              );
-            },
-          ),
-        ],
         bottom: TabBar(
           controller: _tabController,
+          labelColor: const Color(0xFF4A637D),
           tabs: const [
             Tab(text: 'Report'),
             Tab(text: 'Analytics'),
@@ -308,14 +347,13 @@ class _ReportState extends State<Report> with SingleTickerProviderStateMixin {
       body: TabBarView(
         controller: _tabController,
         children: [
-          // Report Tab
+          // Report Tab - Keep your existing report content
           SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  // ... [Keep existing report content]
-                  _showAnalytics ? _buildAnalyticsSection() : Container(),
+                  // Your existing report content
                 ],
               ),
             ),
@@ -323,26 +361,45 @@ class _ReportState extends State<Report> with SingleTickerProviderStateMixin {
           // Analytics Tab
           SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
-            child: _buildAnalyticsSection(),
+            child: Column(
+              children: [
+                _buildVitalsTable(),
+                const SizedBox(height: 16),
+                _buildMedicationSection(),
+              ],
+            ),
           ),
           // History Tab
-          ListView.builder(
-            itemCount: _previousVisits.length,
-            itemBuilder: (context, index) {
-              return ListTile(
-                title: Text('Visit on ${_previousVisits[index]}'),
-                // subtitle: Text('Doctor: ${report['doctor']}'),
-                leading: const CircleAvatar(
-                  child: Icon(Icons.calendar_today),
-                ),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  // Handle viewing historical report
-                },
-              );
-            },
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: _buildVisitHistory(),
           ),
         ],
+      ),
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.all(16.0),
+        color: Colors.white,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'User: $_currentUser',
+              style: const TextStyle(
+                color: Color(0xFF4A637D),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.picture_as_pdf),
+              color: Colors.blue,
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('PDF export coming soon!')),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -351,6 +408,7 @@ class _ReportState extends State<Report> with SingleTickerProviderStateMixin {
   void dispose() {
     _tabController.dispose();
     _noteController.dispose();
+    _timer?.cancel();
     super.dispose();
   }
 }
