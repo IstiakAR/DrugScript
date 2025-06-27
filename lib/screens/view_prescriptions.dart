@@ -74,10 +74,7 @@ class _ViewPrescriptionState extends State<ViewPrescription> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // backgroundColor: Colors.white,
-
       appBar: AppBar(
-        // backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         title: const Text(
           'View Prescription',
           style: TextStyle(
@@ -86,7 +83,6 @@ class _ViewPrescriptionState extends State<ViewPrescription> {
             color: Color.fromARGB(255, 0, 0, 0),
           ),
         ),
-        // iconTheme: const IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pushReplacementNamed(context, '/homePage'),
@@ -118,25 +114,10 @@ class _ViewPrescriptionState extends State<ViewPrescription> {
                         ),
                         child: InkWell(
                           onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                backgroundColor: Colors.black,
-                                content: Text(
-                                  'Selected Prescription ID: ${prescription['prescription_id']}',
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                              ),
-                            );
-                          },
-                          onDoubleTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                backgroundColor: Colors.black,
-                                content: Text(
-                                  'Double tapped on Prescription ID: ${prescription['date']}',
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                              ),
+                            Navigator.pushNamed(
+                              context,
+                              '/prescriptionDetails',
+                              arguments: prescription['prescription_id'],
                             );
                           },
                           child: Padding(

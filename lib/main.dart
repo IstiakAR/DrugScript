@@ -5,6 +5,7 @@ import 'package:drugscript/screens/profile.dart';
 import 'package:drugscript/screens/view_prescriptions.dart';
 import 'package:drugscript/screens/wrapper.dart';
 import 'package:drugscript/screens/report.dart';
+import 'package:drugscript/screens/prescription_details.dart';
 import 'package:drugscript/theme/app_theme.dart';
 
 import 'package:flutter/material.dart';
@@ -36,6 +37,7 @@ class MyApp extends StatelessWidget {
         '/createPrescription': (context) => const AddPrescription(),
         '/report': (context) => const Report(),
         '/viewPrescriptions': (context) => const ViewPrescription(),
+        '/prescriptionDetails': (context) => PrescriptionDetails(prescriptionId: ModalRoute.of(context)?.settings.arguments as String,),
       },
     );
   }
