@@ -1,11 +1,13 @@
-import 'package:drugscript/add_prescription.dart';
-import 'package:drugscript/homepage.dart';
-import 'package:drugscript/medicine_search.dart';
-import 'package:drugscript/profile.dart';
-import 'package:drugscript/wrapper.dart';
-import 'package:drugscript/Report.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:drugscript/screens/homepage.dart';
+import 'package:drugscript/screens/add_prescription.dart';
+import 'package:drugscript/screens/medicine_search.dart';
+import 'package:drugscript/screens/profile.dart';
+import 'package:drugscript/screens/wrapper.dart';
+import 'package:drugscript/screens/report.dart';
+import 'package:drugscript/theme/app_theme.dart';
+
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 
 void main() async {
@@ -23,20 +25,15 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'DrugScript',
       debugShowCheckedModeBanner: false,
-
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 0, 0, 0)),
-      ),
-
+      theme: AppTheme.lightTheme,
       initialRoute: '/',
-
       routes: {
-        '/': (context) => Wrapper(),
-        '/homePage': (context) => HomePage(),
+        '/': (context) => const Wrapper(),
+        '/homePage': (context) => const HomePage(),
         '/medicineSearch': (context) => const MedicineSearchApp(),
         '/profilePage': (context) => const Profile(),
         '/createPrescription': (context) => const AddPrescription(),
-        '/report': (context) =>const Report(),
+        '/report': (context) => const Report(),
       },
     );
   }

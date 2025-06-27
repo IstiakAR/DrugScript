@@ -159,11 +159,9 @@ class MedicineDetailPage extends StatelessWidget {
                                   color: Color.fromARGB(255, 0, 0, 0),
                                 ),
                                 ),
-                              ),
+                              )
                               ],
                             ),
-
-                            const SizedBox(height: 10),
 
                             // Manufacturer Information
                             _buildInfoSection(

@@ -1,23 +1,10 @@
 import 'dart:convert';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
+import '../services/auth_service.dart';
+import '../utils/constants.dart';
 
 class ApiService {
-  final String baseUrl = 'https://fastapi-app-production-6e30.up.railway.app';
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  // Helper to get the current user's ID token
-  Future<String?> _getAuthToken() async {
-    final user = _auth.currentUser;
-    if (user == null) return null;
-
-    try {
-      return await user.getIdToken(true);
-    } catch (e) {
-      print('Error getting auth token: $e');
-      return null;
-    }
-  }
+  final AuthService _authService = AuthService();
 
   // Helper function to convert UI values to backend-compatible values
   String? _processGender(String gender) {
@@ -30,28 +17,27 @@ class ApiService {
         return 'other';
       case 'not specified':
       default:
-        return null; // Send null instead of "Not specified"
+        return null;
     }
   }
 
   String? _processBloodType(String bloodType) {
-    final validTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
-    if (validTypes.contains(bloodType)) {
+    if (AppConstants.bloodTypes.contains(bloodType) && bloodType != 'Not specified') {
       return bloodType;
     }
-    return null; // Send null instead of "Not specified"
+    return null;
   }
 
   // Fetch user profile
   Future<Map<String, dynamic>?> getUserProfile() async {
-    final user = _auth.currentUser;
+    final user = _authService.currentUser;
     if (user == null) return null;
 
     try {
-      final token = await _getAuthToken();
+      final token = await _authService.getIdToken();
 
       final response = await http.get(
-        Uri.parse('$baseUrl/profile'),
+        Uri.parse('${AppConstants.baseUrl}${AppConstants.profileEndpoint}'),
         headers: {
           'Content-Type': 'application/json',
           if (token != null) 'Authorization': 'Bearer $token',
@@ -62,7 +48,6 @@ class ApiService {
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else if (response.statusCode == 404) {
-        // Profile not found
         return null;
       } else {
         print('Error getting profile: ${response.statusCode}');
@@ -87,13 +72,12 @@ class ApiService {
     String? medicalConditions,
     required String emergencyContact,
   }) async {
-    final user = _auth.currentUser;
+    final user = _authService.currentUser;
     if (user == null) return false;
 
     try {
-      final token = await _getAuthToken();
+      final token = await _authService.getIdToken();
 
-      // Process the data to match backend expectations
       final Map<String, dynamic> profileData = {
         "name": name.trim().isEmpty ? null : name,
         "age": age.trim().isEmpty || age == 'Not specified' ? null : age,
@@ -105,7 +89,6 @@ class ApiService {
         "emergency_contact": emergencyContact.trim().isEmpty || emergencyContact == 'Not specified' ? null : emergencyContact,
       };
 
-      // Handle enum fields separately
       final processedGender = _processGender(gender);
       final processedBloodType = _processBloodType(bloodType);
 
@@ -118,7 +101,7 @@ class ApiService {
       }
 
       final response = await http.post(
-        Uri.parse('$baseUrl/profile'),
+        Uri.parse('${AppConstants.baseUrl}${AppConstants.profileEndpoint}'),
         headers: {
           'Content-Type': 'application/json',
           if (token != null) 'Authorization': 'Bearer $token',
@@ -130,12 +113,7 @@ class ApiService {
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
 
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        return true;
-      } else {
-        print('Error response: ${response.statusCode} - ${response.body}');
-        return false;
-      }
+      return response.statusCode == 201 || response.statusCode == 200;
     } catch (e) {
       print('Exception updating/creating profile: $e');
       return false;
@@ -144,16 +122,15 @@ class ApiService {
 
   // Update existing profile (PUT)
   Future<bool> updateUserProfile(Map<String, dynamic> updateFields) async {
-    final user = _auth.currentUser;
+    final user = _authService.currentUser;
     if (user == null) return false;
 
     try {
       final body = jsonEncode(updateFields);
       final response = await http.put(
-        Uri.parse('$baseUrl/profile'),
+        Uri.parse('${AppConstants.baseUrl}${AppConstants.profileEndpoint}'),
         headers: {
           'Content-Type': 'application/json',
-          // 'Authorization': 'Bearer ${await _getAuthToken()}',
         },
         body: body,
       );
@@ -166,19 +143,81 @@ class ApiService {
 
   // Delete user profile
   Future<bool> deleteUserProfile() async {
-    final user = _auth.currentUser;
+    final user = _authService.currentUser;
     if (user == null) return false;
 
     try {
       final response = await http.delete(
-        Uri.parse('$baseUrl/profile'),
-        headers: {
-          // 'Authorization': 'Bearer ${await _getAuthToken()}',
-        },
+        Uri.parse('${AppConstants.baseUrl}${AppConstants.profileEndpoint}'),
       );
       return response.statusCode == 204;
     } catch (e) {
       print('Exception deleting profile: $e');
+      return false;
+    }
+  }
+
+  // Search medicines
+  Future<List<dynamic>> searchMedicines(String query) async {
+    if (query.isEmpty) return [];
+
+    try {
+      final response = await http.post(
+        Uri.parse('${AppConstants.baseUrl}${AppConstants.medicineSearchEndpoint}'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'query': query}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['results'] ?? [];
+      } else {
+        print('Failed to search medicines: ${response.statusCode}');
+        return [];
+      }
+    } catch (e) {
+      print('Error searching medicines: $e');
+      return [];
+    }
+  }
+
+  // Create prescription
+  Future<bool> createPrescription({
+    required String doctorName,
+    required String contact,
+    required List<String> medicinesSlugs,
+    required String image,
+    required String date,
+    required String diagnosis,
+  }) async {
+    final user = _authService.currentUser;
+    if (user == null) return false;
+
+    try {
+      final token = await _authService.getIdToken();
+
+      final Map<String, dynamic> payload = {
+        'doctor_name': doctorName,
+        'contact': contact,
+        'medicines': medicinesSlugs,
+        'image': image,
+        'date': date,
+        'diagnosis': diagnosis,
+        'created_by': user.uid,
+      };
+
+      final response = await http.post(
+        Uri.parse('${AppConstants.baseUrl}${AppConstants.addPrescriptionEndpoint}'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(payload),
+      );
+
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      print('Error creating prescription: $e');
       return false;
     }
   }

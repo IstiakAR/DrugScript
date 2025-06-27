@@ -746,9 +746,7 @@ class _AddPrescriptionState extends State<AddPrescription> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 4),
-                          Text(
-                            '${medicine['generic_name']} ${medicine['strength']}',
-                          ),
+                          Text('${medicine['generic_name']} ${medicine['strength']}'),
                           const SizedBox(height: 2),
                           Text(
                             'Manufacturer: ${medicine['manufacturer_name']}',
@@ -777,9 +775,7 @@ class _AddPrescriptionState extends State<AddPrescription> {
                           ),
                         ],
                       ),
-                      // Remove the onTap that navigates to medicine details
-                      // We can either remove it entirely or replace with null
-                      onTap: null, // This will disable the tap effect
+                      onTap: null,
                     ),
                   );
                 },
@@ -805,7 +801,7 @@ Widget _buildOptionTile({
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey.withOpacity(0.2)),
           borderRadius: BorderRadius.circular(12),
@@ -813,23 +809,23 @@ Widget _buildOptionTile({
         child: Row(
           children: [
             Container(
-              padding: EdgeInsets.all(10),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: iconColor.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: iconColor),
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     subtitle,
                     style: TextStyle(fontSize: 12, color: Colors.grey[600]),
@@ -837,7 +833,7 @@ Widget _buildOptionTile({
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
           ],
         ),
       ),

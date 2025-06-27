@@ -1,11 +1,13 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'services/api_service.dart';
+import '../services/api_service.dart';
+import '../services/auth_service.dart';
+import '../utils/constants.dart';
+import '../utils/validators.dart';
+import '../utils/helpers.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -14,17 +16,14 @@ class Profile extends StatefulWidget {
   State<Profile> createState() => _ProfileState();
 }
 
-
 class _ProfileState extends State<Profile> {
-  
-  User? user; // Change to nullable
-  // ignore: unused_field
   final ApiService _apiService = ApiService();
+  final AuthService _authService = AuthService();
 
   bool _isLoading = false;
   bool _isEditing = false;
   
-  // Initialize controllers directly instead of using late
+  // Initialize controllers with default values
   final TextEditingController _nameController = TextEditingController(text: 'No Name');
   final TextEditingController _bloodTypeController = TextEditingController(text: 'Not specified');
   final TextEditingController _allergiesController = TextEditingController(text: 'None');
@@ -39,21 +38,24 @@ class _ProfileState extends State<Profile> {
   @override
   void initState() {
     super.initState();
-    // Get the user and update the name controller if available
-    user = FirebaseAuth.instance.currentUser;
-    if (user != null && user!.displayName != null) {
-      _nameController.text = user!.displayName!;
+    _initializeUserData();
+  }
+
+  void _initializeUserData() {
+    final user = _authService.currentUser;
+    if (user != null && user.displayName != null) {
+      _nameController.text = user.displayName!;
     }
     
-    // Make sure blood type has a valid value from our list
-    final validBloodTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Not specified'];
-    if (!validBloodTypes.contains(_bloodTypeController.text)) {
+    // Ensure blood type has a valid value
+    if (!AppConstants.bloodTypes.contains(_bloodTypeController.text)) {
       _bloodTypeController.text = 'Not specified';
     }
   }
   
   @override
   void dispose() {
+    // ...existing code...
     _nameController.dispose();
     _bloodTypeController.dispose();
     _allergiesController.dispose();
@@ -68,9 +70,10 @@ class _ProfileState extends State<Profile> {
   }
 
   Future<void> signOut() async {
-    await GoogleSignIn().signOut();
-    await FirebaseAuth.instance.signOut();
-    Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+    await _authService.signOut();
+    if (mounted) {
+      Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+    }
   }
   
   void _toggleEditMode() {
@@ -84,31 +87,20 @@ class _ProfileState extends State<Profile> {
       _isLoading = true;
     });
     
-    // Don't set default values here - let the API service handle nulls
-    // Just trim whitespace
-    final trimmedName = _nameController.text.trim();
-    final trimmedAge = _ageController.text.trim();
-    final trimmedAddress = _addressController.text.trim();
-    final trimmedPhone = _phoneController.text.trim();
-    final trimmedGender = _genderController.text.trim();
-    final trimmedDob = _dobController.text.trim();
-    final trimmedBloodType = _bloodTypeController.text.trim();
-    final trimmedAllergies = _allergiesController.text.trim();
-    final trimmedMedicalConditions = _medicalConditionsController.text.trim();
-    final trimmedEmergencyContact = _emergencyContactController.text.trim();
-
-    // Save data to FastAPI backend
+    final user = _authService.currentUser;
     final success = await _apiService.upsertUserProfile(
-      name: trimmedName.isEmpty ? (user?.displayName ?? 'Unknown') : trimmedName,
-      age: trimmedAge,
-      address: trimmedAddress,
-      gender: trimmedGender,
-      phone: trimmedPhone,
-      dateOfBirth: trimmedDob,
-      bloodType: trimmedBloodType,
-      allergies: trimmedAllergies,
-      medicalConditions: trimmedMedicalConditions,
-      emergencyContact: trimmedEmergencyContact,
+      name: _nameController.text.trim().isEmpty 
+          ? (user?.displayName ?? 'Unknown') 
+          : _nameController.text.trim(),
+      age: _ageController.text.trim(),
+      address: _addressController.text.trim(),
+      gender: _genderController.text.trim(),
+      phone: _phoneController.text.trim(),
+      dateOfBirth: _dobController.text.trim(),
+      bloodType: _bloodTypeController.text.trim(),
+      allergies: _allergiesController.text.trim(),
+      medicalConditions: _medicalConditionsController.text.trim(),
+      emergencyContact: _emergencyContactController.text.trim(),
     );
     
     setState(() {
@@ -116,28 +108,18 @@ class _ProfileState extends State<Profile> {
       _isEditing = false;
     });
     
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated successfully')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to update profile')),
+    if (mounted) {
+      Helpers.showMessage(
+        context,
+        success ? 'Profile updated successfully' : 'Failed to update profile',
+        isError: !success,
       );
     }
   }
   
-  // Add this method to handle cancellation
   void _cancelEdit() {
-    // Reset controllers to their original values
     setState(() {
-      // Reset user name if available
-      if (user != null && user!.displayName != null) {
-        _nameController.text = user!.displayName!;
-      } else {
-        _nameController.text = 'No Name';
-      }
-      
+      _initializeUserData();
       // Reset other fields to default values
       _bloodTypeController.text = 'Not specified';
       _allergiesController.text = 'None';
@@ -148,7 +130,6 @@ class _ProfileState extends State<Profile> {
       _phoneController.text = 'Not specified';
       _genderController.text = 'Not specified';
       _dobController.text = 'Not specified';
-      
       _isEditing = false;
     });
   }
@@ -173,21 +154,20 @@ class _ProfileState extends State<Profile> {
     
     if (picked != null) {
       setState(() {
-        // Format date as MM/DD/YYYY
-        _dobController.text = DateFormat('MM/dd/yyyy').format(picked);
+        _dobController.text = Helpers.formatDate(picked);
       });
     }
   }
   
   @override
   Widget build(BuildContext context) {
+    final user = _authService.currentUser;
     final photoUrl = user?.photoURL;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Patient Profile'),
         actions: [
-          // Show save/cancel buttons only in edit mode
           if (_isEditing) ...[
             IconButton(
               icon: const Icon(Icons.close),
@@ -242,9 +222,7 @@ class _ProfileState extends State<Profile> {
                           _isEditing 
                             ? TextField(
                                 controller: _nameController,
-                                decoration: const InputDecoration(
-                                  labelText: 'Name',
-                                ),
+                                decoration: const InputDecoration(labelText: 'Name'),
                               )
                             : Text(
                                 _nameController.text,
@@ -269,59 +247,33 @@ class _ProfileState extends State<Profile> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Personal Information',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      'Personal Information',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     
-                    // Age
-                    _buildInfoField(
-                      'Age',
-                      _ageController,
-                      Icons.calendar_today,
+                    _buildInfoField('Age', _ageController, Icons.calendar_today,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       keyboardType: TextInputType.number,
                     ),
-                    
-                    // Gender
-                    _buildInfoField(
-                      'Gender',
-                      _genderController,
-                      Icons.person_outline,
-                    ),
-                    
-                    // Address
-                    _buildInfoField(
-                      'Address',
-                      _addressController,
-                      Icons.home,
-                    ),
-                    
-                    // Phone
-                    _buildInfoField(
-                      'Phone Number',
-                      _phoneController,
-                      Icons.phone,
+                    _buildInfoField('Gender', _genderController, Icons.person_outline),
+                    _buildInfoField('Address', _addressController, Icons.home),
+                    _buildInfoField('Phone Number', _phoneController, Icons.phone,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       keyboardType: TextInputType.phone,
                     ),
                     
-                    // Date of Birth
+                    // Date of Birth with special handling
                     _isEditing 
                       ? GestureDetector(
                           onTap: () => _selectDate(context),
                           child: AbsorbPointer(
                             child: TextField(
                               controller: _dobController,
-                              decoration: InputDecoration(
+                              decoration: const InputDecoration(
                                 labelText: 'Date of Birth',
                                 prefixIcon: Icon(Icons.cake),
                                 suffixIcon: Icon(Icons.calendar_today, size: 18),
@@ -331,8 +283,8 @@ class _ProfileState extends State<Profile> {
                         )
                       : ListTile(
                           contentPadding: EdgeInsets.zero,
-                          leading: Icon(Icons.cake),
-                          title: Text('Date of Birth'),
+                          leading: const Icon(Icons.cake),
+                          title: const Text('Date of Birth'),
                           subtitle: Text(_dobController.text),
                         ),
                   ],
@@ -347,46 +299,18 @@ class _ProfileState extends State<Profile> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Medical Information',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      'Medical Information',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     
-                    // Blood Type
-                    _buildInfoField(
-                      'Blood Type',
-                      _bloodTypeController,
-                      Icons.bloodtype,
-                    ),
-                    
-                    // Allergies
-                    _buildInfoField(
-                      'Allergies',
-                      _allergiesController,
-                      Icons.warning_amber,
-                    ),
-                    
-                    // Medical Conditions
-                    _buildInfoField(
-                      'Medical Conditions',
-                      _medicalConditionsController,
-                      Icons.medical_services,
-                    ),
-                    
-                    // Emergency Contact
-                    _buildInfoField(
-                      'Emergency Contact',
-                      _emergencyContactController,
-                      Icons.contact_phone,
-                    ),
+                    _buildInfoField('Blood Type', _bloodTypeController, Icons.bloodtype),
+                    _buildInfoField('Allergies', _allergiesController, Icons.warning_amber),
+                    _buildInfoField('Medical Conditions', _medicalConditionsController, Icons.medical_services),
+                    _buildInfoField('Emergency Contact', _emergencyContactController, Icons.contact_phone),
                   ],
                 ),
               ),
@@ -396,7 +320,8 @@ class _ProfileState extends State<Profile> {
     );
   }
   
-  Widget _buildInfoField(String label, TextEditingController controller, IconData icon, {List<TextInputFormatter>? inputFormatters, TextInputType? keyboardType}) {
+  Widget _buildInfoField(String label, TextEditingController controller, IconData icon, 
+      {List<TextInputFormatter>? inputFormatters, TextInputType? keyboardType}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: _isEditing && label != 'Blood Type' && label != 'Gender'
@@ -411,14 +336,14 @@ class _ProfileState extends State<Profile> {
           )
         : _isEditing && label == 'Blood Type'
           ? DropdownButtonFormField<String>(
-              value: _bloodTypeController.text,
-              items: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Not specified']
+              value: controller.text,
+              items: AppConstants.bloodTypes
                 .map((type) => DropdownMenuItem(value: type, child: Text(type)))
                 .toList(),
               onChanged: (value) {
                 if (value != null) {
                   setState(() {
-                    _bloodTypeController.text = value;
+                    controller.text = value;
                   });
                 }
               },
@@ -429,14 +354,14 @@ class _ProfileState extends State<Profile> {
             )
           : _isEditing && label == 'Gender'
             ? DropdownButtonFormField<String>(
-                value: _genderController.text,
-                items: ['Male', 'Female', 'Prefer not to say', 'Not specified']
+                value: controller.text,
+                items: AppConstants.genderOptions
                   .map((gender) => DropdownMenuItem(value: gender, child: Text(gender)))
                   .toList(),
                 onChanged: (value) {
                   if (value != null) {
                     setState(() {
-                      _genderController.text = value;
+                      controller.text = value;
                     });
                   }
                 },
