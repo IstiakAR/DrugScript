@@ -129,25 +129,10 @@ class _ViewPrescriptionState extends State<ViewPrescription> {
                         ),
                         child: InkWell(
                           onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                backgroundColor: Colors.black,
-                                content: Text(
-                                  'Selected Prescription ID: ${prescription['prescription_id']}',
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                              ),
-                            );
-                          },
-                          onDoubleTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                backgroundColor: Colors.black,
-                                content: Text(
-                                  'Double tapped on Prescription ID: ${prescription['date']}',
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                              ),
+                            Navigator.pushNamed(
+                              context,
+                              '/prescriptionDetails',
+                              arguments: prescription['prescription_id'],
                             );
                           },
                           child: Padding(

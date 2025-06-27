@@ -5,6 +5,7 @@ import 'package:drugscript/screens/profile.dart';
 import 'package:drugscript/screens/view_prescriptions.dart';
 import 'package:drugscript/screens/wrapper.dart';
 import 'package:drugscript/screens/report.dart';
+import 'package:drugscript/screens/prescription_details.dart';
 import 'package:drugscript/theme/app_theme.dart';
 import 'package:drugscript/screens/splash_screen.dart';
 import 'package:drugscript/screens/scan_qr_page.dart';
@@ -45,6 +46,7 @@ class MyApp extends StatelessWidget {
         '/report': (context) => const Report(),
         '/viewPrescriptions': (context) => const ViewPrescription(),
         '/scanQrPage': (context) => const ScanQrPage(),
+        '/prescriptionDetails': (context) => PrescriptionDetails(prescriptionId: ModalRoute.of(context)?.settings.arguments as String,),
       },
     );
   }
