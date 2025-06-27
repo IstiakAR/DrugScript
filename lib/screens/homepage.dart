@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import '../services/auth_service.dart';
+
+
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -7,6 +11,9 @@ class HomePage extends StatefulWidget {
   @override
   State<HomePage> createState() => _HomePageState();
 }
+
+final user = AuthService().currentUser;
+final email = user?.email ?? 'No Email'; // for generate QR-code to find the user data
 
 class _HomePageState extends State<HomePage> {
   @override
@@ -51,7 +58,7 @@ class _HomePageState extends State<HomePage> {
                                     width: 200,
                                     height: 200,
                                     child: QrImageView(
-                                      data: "12345678",
+                                      data: email,
                                       version: QrVersions.auto,
                                       size: 200.0,
                                     ),
