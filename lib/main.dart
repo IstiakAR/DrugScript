@@ -2,6 +2,7 @@ import 'package:drugscript/screens/homepage.dart';
 import 'package:drugscript/screens/add_prescription.dart';
 import 'package:drugscript/screens/medicine_search.dart';
 import 'package:drugscript/screens/profile.dart';
+import 'package:drugscript/screens/view_prescriptions.dart';
 import 'package:drugscript/screens/wrapper.dart';
 import 'package:drugscript/screens/report.dart';
 import 'package:drugscript/theme/app_theme.dart';
@@ -34,6 +35,7 @@ class MyApp extends StatelessWidget {
         '/profilePage': (context) => const Profile(),
         '/createPrescription': (context) => const AddPrescription(),
         '/report': (context) => const Report(),
+        '/viewPrescriptions': (context) => const ViewPrescription(),
       },
     );
   }
