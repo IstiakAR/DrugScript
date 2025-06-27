@@ -481,7 +481,7 @@ class _ReportState extends State<Report> with SingleTickerProviderStateMixin {
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFF4A637D)),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pushReplacementNamed(context, '/homePage'),
         ),
         title: Column(
           children: [
