@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -36,34 +37,106 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ],
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pushReplacementNamed(context, '/profilePage');
-                    },
-                    child: CircleAvatar(
-                      radius: 22,
-                      backgroundColor: const Color.fromARGB(255, 220, 239, 255),
-                      child: Icon(
-                        Icons.person_4_rounded,
-                        color: Color.fromARGB(255, 47, 47, 49),
-                        size: 30,
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () async {
+                          if (!mounted) return;
+                          await showDialog(
+                            context: context,
+                            builder:
+                                (context) => AlertDialog(
+                                  title: const Text("Your QR Code"),
+                                  content: SizedBox(
+                                    width: 200,
+                                    height: 200,
+                                    child: QrImageView(
+                                      data: "12345678",
+                                      version: QrVersions.auto,
+                                      size: 200.0,
+                                    ),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pushAndRemoveUntil(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder:
+                                                (context) => const HomePage(),
+                                          ),
+                                          (route) => false,
+                                        );
+                                      },
+                                      child: const Text("Close"),
+                                    ),
+                                  ],
+                                ),
+                          );
+                        },
+                        child: CircleAvatar(
+                          radius: 22,
+                          backgroundColor: const Color.fromARGB(
+                            255,
+                            220,
+                            239,
+                            255,
+                          ),
+                          child: const Icon(
+                            Icons.qr_code_rounded, // <-- QR code icon
+                            color: Color.fromARGB(255, 47, 47, 49),
+                            size: 30,
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 12), // space between avatars
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushReplacementNamed(
+                            context,
+                            '/profilePage',
+                          );
+                        },
+                        child: CircleAvatar(
+                          radius: 22,
+                          backgroundColor: const Color.fromARGB(
+                            255,
+                            220,
+                            239,
+                            255,
+                          ),
+                          child: const Icon(
+                            Icons.person_4_rounded,
+                            color: Color.fromARGB(255, 47, 47, 49),
+                            size: 30,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-
               const SizedBox(height: 30),
 
               // Quick Stats Cards
               Row(
                 children: [
                   Expanded(
-                    child: _buildStatCard('Active Prescriptions', '3', Icons.medication, Color.fromARGB(255, 26,90,100)),
+                    child: _buildStatCard(
+                      'Active Prescriptions',
+                      '3',
+                      Icons.medication,
+                      const Color.fromARGB(255, 26, 90, 100),
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: _buildStatCard('Today\'s Reminders', '2', Icons.notifications_active, Color.fromARGB(255, 64, 53, 123)),
+                    child: _buildStatCard(
+                      'Today\'s Reminders',
+                      '2',
+                      Icons.notifications_active,
+                      const Color.fromARGB(255, 64, 53, 123),
+                    ),
                   ),
                 ],
               ),
@@ -87,13 +160,42 @@ class _HomePageState extends State<HomePage> {
                 crossAxisSpacing: 16,
                 childAspectRatio: 1.2,
                 children: [
-                  // rgba(26,90,100,255)
-                  _buildActionCard('Medicine Search', Icons.search, Color.fromARGB(255, 64, 55, 124), '/medicineSearch'),
-                  _buildActionCard('Add Prescription', Icons.add_circle, Color.fromARGB(255, 109, 205, 163), '/createPrescription'),
-                  _buildActionCard('View Prescriptions', Icons.description, Color.fromARGB(255, 51,184,196), '/viewPrescriptions'),
-                  _buildActionCard('My Reports', Icons.analytics, Color.fromARGB(255, 159, 140, 140), '/report'),
-                  _buildActionCard('Scan QR', Icons.qr_code_scanner, Color.fromARGB(255, 47, 47, 49), '/scanQrPage'),
-                  _buildActionCard('Shared With Me', Icons.share_outlined,Color.fromARGB(255, 55, 93, 175), '/emptyPage'),
+                  _buildActionCard(
+                    'Medicine Search',
+                    Icons.search,
+                    const Color.fromARGB(255, 64, 55, 124),
+                    '/medicineSearch',
+                  ),
+                  _buildActionCard(
+                    'Add Prescription',
+                    Icons.add_circle,
+                    const Color.fromARGB(255, 109, 205, 163),
+                    '/createPrescription',
+                  ),
+                  _buildActionCard(
+                    'View Prescriptions',
+                    Icons.description,
+                    const Color.fromARGB(255, 51, 184, 196),
+                    '/viewPrescriptions',
+                  ),
+                  _buildActionCard(
+                    'My Reports',
+                    Icons.analytics,
+                    const Color.fromARGB(255, 159, 140, 140),
+                    '/report',
+                  ),
+                  _buildActionCard(
+                    'Scan QR',
+                    Icons.qr_code_scanner,
+                    const Color.fromARGB(255, 47, 47, 49),
+                    '/scanQrPage',
+                  ),
+                  _buildActionCard(
+                    'Shared With Me',
+                    Icons.share_outlined,
+                    const Color.fromARGB(255, 55, 93, 175),
+                    '/emptyPage',
+                  ),
                 ],
               ),
               const SizedBox(height: 20),
@@ -114,7 +216,6 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ],
                 ),
-
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -148,9 +249,17 @@ class _HomePageState extends State<HomePage> {
                           Navigator.pushReplacementNamed(context, '/emptyPage');
                         },
                         icon: const Icon(Icons.visibility, size: 20),
-                        label: const Text('View all reminders', style: TextStyle(fontSize: 16)),
+                        label: const Text(
+                          'View all reminders',
+                          style: TextStyle(fontSize: 16),
+                        ),
                         style: TextButton.styleFrom(
-                          foregroundColor: Color.fromARGB(255, 47, 47, 49),
+                          foregroundColor: const Color.fromARGB(
+                            255,
+                            47,
+                            47,
+                            49,
+                          ),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                       ),
@@ -165,8 +274,12 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -188,7 +301,7 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 3),
           Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 30,
               fontWeight: FontWeight.bold,
               color: Colors.white,
@@ -196,17 +309,19 @@ class _HomePageState extends State<HomePage> {
           ),
           Text(
             title,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.white,
-            ),
+            style: const TextStyle(fontSize: 13, color: Colors.white),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildActionCard(String title, IconData icon, Color color, String route) {
+  Widget _buildActionCard(
+    String title,
+    IconData icon,
+    Color color,
+    String route,
+  ) {
     return GestureDetector(
       onTap: () {
         Navigator.pushReplacementNamed(context, route);
@@ -234,11 +349,7 @@ class _HomePageState extends State<HomePage> {
                 color: color.withOpacity(1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                icon,
-                color: Colors.white,
-                size: 32,
-              ),
+              child: Icon(icon, color: Colors.white, size: 32),
             ),
             const SizedBox(height: 12),
             Text(
@@ -255,7 +366,6 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
 
   Widget _buildReminderItem(String medicine, String time, bool taken) {
     return Container(
@@ -286,13 +396,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          Text(
-            time,
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 14,
-            ),
-          ),
+          Text(time, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
         ],
       ),
     );
