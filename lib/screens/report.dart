@@ -1,5 +1,4 @@
 import 'dart:async' show Timer;
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -28,18 +27,12 @@ class _ReportState extends State<Report> with SingleTickerProviderStateMixin {
   final List<Map<String, dynamic>> _previousVisits = [];
   final Map<String, dynamic> _medicationHistory = {};
 
-  // final Map<String, dynamic> _randomReport = _generateRandomReport();
-
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _generateAnalyticsData();
-
-    // Initialize date time
     _updateDateTime();
-
-    // Update time every second
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _updateDateTime();
     });
@@ -51,6 +44,35 @@ class _ReportState extends State<Report> with SingleTickerProviderStateMixin {
         'yyyy-MM-dd HH:mm:ss',
       ).format(DateTime.now().toUtc());
     });
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(
+      source: source,
+      maxWidth: 1200,
+      maxHeight: 1200,
+      imageQuality: 85,
+    );
+    if (pickedFile != null) {
+      setState(() {
+        _reportImage = File(pickedFile.path);
+      });
+    }
+  }
+
+  Future<void> _pickMultiImages() async {
+    final picker = ImagePicker();
+    final pickedFiles = await picker.pickMultiImage(
+      maxWidth: 1200,
+      maxHeight: 1200,
+      imageQuality: 85,
+    );
+    if (pickedFiles.isNotEmpty) {
+      setState(() {
+        _multiImages = pickedFiles.map((x) => File(x.path)).toList();
+      });
+    }
   }
 
   void _generateAnalyticsData() {
@@ -112,6 +134,145 @@ class _ReportState extends State<Report> with SingleTickerProviderStateMixin {
         'ended': '2025-06-20',
       },
     ];
+  }
+
+  Widget _buildReportContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Report Details',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey[800],
+          ),
+        ),
+        const SizedBox(height: 16),
+        if (_reportImage != null)
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.file(
+              _reportImage!,
+              height: 200,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
+          )
+        else
+          Container(
+            height: 200,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey[300]!),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.add_photo_alternate,
+                  size: 40,
+                  color: Colors.grey[400],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Add Report Image",
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
+              ],
+            ),
+          ),
+        const SizedBox(height: 16),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _buildActionButton(
+                icon: Icons.photo_library,
+                label: 'Gallery',
+                onPressed: () => _pickImage(ImageSource.gallery),
+              ),
+              const SizedBox(width: 8),
+              _buildActionButton(
+                icon: Icons.camera_alt,
+                label: 'Camera',
+                onPressed: () => _pickImage(ImageSource.camera),
+              ),
+              const SizedBox(width: 8),
+              _buildActionButton(
+                icon: Icons.collections,
+                label: 'Multiple',
+                onPressed: _pickMultiImages,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        if (_multiImages.isNotEmpty) ...[
+          Text(
+            'Additional Images',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[700],
+            ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 80,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: _multiImages.length,
+              itemBuilder: (context, index) {
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.file(
+                      _multiImages[index],
+                      width: 80,
+                      height: 80,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+        TextField(
+          controller: _noteController,
+          maxLines: 4,
+          decoration: InputDecoration(
+            hintText: 'Add notes or observations...',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            filled: true,
+            fillColor: Colors.grey[50],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return ElevatedButton.icon(
+      icon: Icon(icon),
+      label: Text(label),
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF4A637D),
+        elevation: 2,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      ),
+    );
   }
 
   Widget _buildVitalsTable() {
@@ -318,6 +479,10 @@ class _ReportState extends State<Report> with SingleTickerProviderStateMixin {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF4A637D)),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Column(
           children: [
             const Text(
@@ -347,18 +512,10 @@ class _ReportState extends State<Report> with SingleTickerProviderStateMixin {
       body: TabBarView(
         controller: _tabController,
         children: [
-          // Report Tab - Keep your existing report content
           SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  // Your existing report content
-                ],
-              ),
-            ),
+            padding: const EdgeInsets.all(16.0),
+            child: _buildReportContent(),
           ),
-          // Analytics Tab
           SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -369,7 +526,6 @@ class _ReportState extends State<Report> with SingleTickerProviderStateMixin {
               ],
             ),
           ),
-          // History Tab
           SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: _buildVisitHistory(),
@@ -378,7 +534,12 @@ class _ReportState extends State<Report> with SingleTickerProviderStateMixin {
       ),
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16.0),
-        color: Colors.white,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
+          ],
+        ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -389,14 +550,24 @@ class _ReportState extends State<Report> with SingleTickerProviderStateMixin {
                 fontWeight: FontWeight.w500,
               ),
             ),
-            IconButton(
-              icon: const Icon(Icons.picture_as_pdf),
-              color: Colors.blue,
+            ElevatedButton(
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('PDF export coming soon!')),
+                  SnackBar(
+                    content: Text('Report saved - $_currentDateTime'),
+                    backgroundColor: Colors.green,
+                  ),
                 );
               },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFD0E8FF),
+                foregroundColor: const Color(0xFF4A637D),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+              child: const Text('Save Report'),
             ),
           ],
         ),
