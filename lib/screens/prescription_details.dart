@@ -1,10 +1,9 @@
 import 'dart:convert';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-class PrescriptionDetails extends StatefulWidget{
+class PrescriptionDetails extends StatefulWidget {
   final String prescriptionId;
 
   const PrescriptionDetails({super.key, required this.prescriptionId});
@@ -18,11 +17,11 @@ class _PrescriptionDetailsState extends State<PrescriptionDetails> {
   bool _isLoading = true;
   bool _hasError = false;
   String? _errorMessage;
-  
-  // Color scheme
-  final Color primaryColor = const Color.fromARGB(255, 174, 219, 255);
-  final Color accentColor = const Color.fromARGB(255, 63, 169, 245);
-  final Color textColor = const Color.fromARGB(255, 51, 51, 51);
+
+  // Updated color scheme
+  final Color primaryColor = const Color.fromARGB(255, 217, 217, 217);
+  final Color accentColor = const Color(0xFFB0E5B8);
+  final Color textColor = const Color(0xFF333333);
 
   @override
   void initState() {
@@ -31,17 +30,17 @@ class _PrescriptionDetailsState extends State<PrescriptionDetails> {
   }
 
   Future<String?> _getAuthToken() async {
+    // Ensure the user is authenticated before proceeding
     User? user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      throw Exception('User not authenticated');
+      throw Exception('User is not currently authenticated.');
     }
-    return await user.getIdToken(true);
+    return user.getIdToken(true);
   }
 
   Future<void> _fetchPrescriptionDetails() async {
     try {
       final String? authToken = await _getAuthToken();
-
       final response = await http.get(
         Uri.parse(
           'https://fastapi-app-production-6e30.up.railway.app/prescription/${widget.prescriptionId}',
@@ -54,25 +53,16 @@ class _PrescriptionDetailsState extends State<PrescriptionDetails> {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        
+
         setState(() {
           _prescriptionData = data;
           _isLoading = false;
         });
-        
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Prescription fetched successfully'),
-              backgroundColor: accentColor,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
       } else {
         setState(() {
           _hasError = true;
-          _errorMessage = 'Failed to fetch prescription. Status: ${response.statusCode}';
+          _errorMessage =
+              'Failed to fetch the prescription. Status code: ${response.statusCode}';
           _isLoading = false;
         });
       }
@@ -82,52 +72,66 @@ class _PrescriptionDetailsState extends State<PrescriptionDetails> {
         _errorMessage = 'Error: ${e.toString()}';
         _isLoading = false;
       });
-      print('Error fetching prescription data: $e');
     }
   }
 
-  Widget _buildSectionTitle(String title, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: Row(
-        children: [
-          Icon(icon, color: accentColor, size: 24),
-          const SizedBox(width: 8),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: textColor,
-            ),
+
+  Widget _buildSectionCard(String title, Widget content) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            spreadRadius: 2,
+            blurRadius: 9,
+            offset: const Offset(0, 1), // changes position of shadow
           ),
         ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color.fromARGB(255, 0, 0, 0),
+              ),
+            ),
+            const SizedBox(height: 12),
+            content,
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildInfoItem(String label, String value) {
+  Widget _buildInfoRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 100,
+            width: 130,
             child: Text(
-              "$label:",
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: textColor.withOpacity(0.7),
-              ),
+              label,
+              style: const TextStyle(fontSize: 16, color: Color.fromARGB(255, 0, 0, 0)),
             ),
           ),
           Expanded(
             child: Text(
-              value != 'N/A' ? value : 'Not available',
+              value.isNotEmpty ? value : 'Not available',
               style: TextStyle(
+                fontSize: 16,
                 fontWeight: FontWeight.w500,
-                color: value != 'N/A' ? textColor : Colors.grey,
+                color: value.isNotEmpty ? textColor : Colors.grey,
               ),
             ),
           ),
@@ -137,207 +141,181 @@ class _PrescriptionDetailsState extends State<PrescriptionDetails> {
   }
 
   Widget _buildMedicinesList() {
-    if (_prescriptionData['medicines'] == null || 
-        _prescriptionData['medicines'] is! List || 
-        (_prescriptionData['medicines'] as List).isEmpty) {
-      return Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: const Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Text('No medicines prescribed'),
-        ),
-      );
+    final medicines = _prescriptionData['medicines'];
+    if (medicines == null || medicines is! List || medicines.isEmpty) {
+      return const Text('No medicines prescribed.');
     }
-    
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        _buildSectionTitle('Medicines', Icons.medication),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: (_prescriptionData['medicines'] as List).length,
-          itemBuilder: (context, index) {
-            final medicine = (_prescriptionData['medicines'] as List)[index];
-            return Card(
-              margin: const EdgeInsets.only(bottom: 10),
-              elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: primaryColor,
-                  child: const Icon(Icons.medication_outlined, color: Colors.white),
-                ),
-                title: Text(
-                  medicine.toString(),
-                  style: TextStyle(fontWeight: FontWeight.w500, color: textColor),
-                ),
-              ),
-            );
-          },
-        ),
+        for (var medicine in medicines)
+          Text('• $medicine', style: const TextStyle(fontSize: 16)),
       ],
     );
-  }
-
-  Widget _buildPrescriptionImage() {
-    if (_prescriptionData['image'] == null || _prescriptionData['image'].toString().isEmpty) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSectionTitle('Prescription Image', Icons.image),
-          Card(
-            elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text('No image available'),
-            ),
-          ),
-        ],
-      );
-    }
-    
-    try {
-      final bytes = base64Decode(_prescriptionData['image']);
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSectionTitle('Prescription Image', Icons.image),
-          Card(
-            elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.memory(
-                  bytes,
-                  errorBuilder: (context, error, stackTrace) => 
-                    const Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Center(child: Text('Failed to load image')),
-                    ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      );
-    } catch (e) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSectionTitle('Prescription Image', Icons.image),
-          Card(
-            elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text('Invalid image data'),
-            ),
-          ),
-        ],
-      );
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Prescription Details',
+
+        title: Text(
+          'Diagnosis by Dr. ${_prescriptionData['doctor_name'] ?? ''}',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: Colors.black,
+            color: Color.fromARGB(255, 0, 0, 0),
           ),
         ),
-        backgroundColor: primaryColor,
-        elevation: 0,
+
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Color.fromARGB(255, 0, 0, 0)),
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      backgroundColor: Colors.grey.shade50,
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator(color: accentColor))
-          : _hasError
+      body:
+          _isLoading
+              ? Center(child: CircularProgressIndicator(color: primaryColor))
+              : _hasError
               ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.error_outline, size: 60, color: Colors.red),
-                      const SizedBox(height: 16),
-                      Text(
-                        _errorMessage ?? 'An error occurred',
-                        style: const TextStyle(fontSize: 16),
-                        textAlign: TextAlign.center,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 60,
+                      color: Colors.red,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      _errorMessage ?? 'An error occurred.',
+                      style: const TextStyle(fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: _fetchPrescriptionDetails,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
                       ),
-                      const SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: _fetchPrescriptionDetails,
-                        style: ElevatedButton.styleFrom(backgroundColor: accentColor),
-                        child: const Text('Try Again'),
-                      ),
-                    ],
-                  ),
-                )
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Card(
-                        elevation: 3,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(20.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildSectionTitle('Prescription Information', Icons.description),
-                              _buildInfoItem('ID', _prescriptionData['_id'] ?? 'N/A'),
-                              _buildInfoItem('Doctor', _prescriptionData['doctor_name'] ?? 'N/A'),
-                              _buildInfoItem('Contact', _prescriptionData['contact'] ?? 'N/A'),
-                              _buildInfoItem('Date', _prescriptionData['date'] ?? 'N/A'),
-                              _buildInfoItem('Diagnosis', _prescriptionData['diagnosis'] ?? 'N/A'),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      _buildMedicinesList(),
-                      const SizedBox(height: 24),
-                      _buildPrescriptionImage(),
-                      const SizedBox(height: 24),
-                      Card(
-                        elevation: 3,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(20.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildSectionTitle('Additional Information', Icons.info_outline),
-                              _buildInfoItem('Created By', _prescriptionData['created_by'] ?? 'N/A'),
-                              _buildInfoItem('Created At', _prescriptionData['created_at'] != null ? 
-                                  DateTime.parse(_prescriptionData['created_at']).toLocal().toString() : 'N/A'),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                  ),
+                      child: const Text('Try Again'),
+                    ),
+                  ],
                 ),
+              )
+              : SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionCard(
+                      'Basic Information',
+                      Column(
+                        children: [
+                          _buildInfoRow(
+                            'Doctor Name',
+                            _prescriptionData['doctor_name'] ?? '',
+                          ),
+                          _buildInfoRow(
+                            'Contact',
+                            _prescriptionData['contact'] ?? '',
+                          ),
+                          _buildInfoRow(
+                            'Date',
+                            _prescriptionData['date'] ?? '',
+                          ),
+                          _buildInfoRow(
+                            'Diagnosis',
+                            _prescriptionData['diagnosis'] ?? '',
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    
+                    if (_prescriptionData['image'] != null && _prescriptionData['image'].toString().isNotEmpty)
+                      _buildSectionCard(
+                        'Prescription Image',
+                        GestureDetector(
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (_) => Dialog(
+                                insetPadding: EdgeInsets.zero,
+                                backgroundColor: Colors.transparent,
+                                child: InteractiveViewer(
+                                  panEnabled: true,
+                                  minScale: 0.5,
+                                  maxScale: 4,
+                                  child: Image.memory(
+                                    base64Decode(_prescriptionData['image'].toString()),
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (ctx, err, stack) => const Text('Failed to load image'),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.2,
+                              width: double.infinity,
+                              child: Image.memory(
+                                base64Decode(_prescriptionData['image'].toString()),
+                                fit: BoxFit.cover,
+                                errorBuilder: (ctx, err, stack) => const Text('Failed to load image'),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+
+                    _buildSectionCard(
+                      'Medicines',
+                      InkWell(
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (_) => AlertDialog(
+                              title: const Text('Prescribed Medicines'),
+                              content: SingleChildScrollView(
+                                child: _buildMedicinesList(),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: const Text('Close'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: Row(
+                            children: [
+                              Icon(Icons.medical_services, color: accentColor),
+                              const SizedBox(width: 8),
+                              Text(
+                                'View Medicines',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  color: textColor,
+                                ),
+                              ),
+                              const Spacer(),
+                              Icon(Icons.arrow_forward_ios, size: 16, color: textColor),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
     );
   }
 }

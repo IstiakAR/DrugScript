@@ -97,9 +97,9 @@ class MedicineDetailPage extends StatelessWidget {
                               width: double.infinity,
                               padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
-                                color: Color.fromARGB(255, 64, 55, 124),
+                                color: Color.fromARGB(51, 35, 255, 97),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Color.fromARGB(255, 64, 55, 124)),
+                                border: Border.all(color: Color.fromARGB(255, 88, 206, 59)),
                               ),
                               child: Row(
                                 mainAxisAlignment:
@@ -112,17 +112,17 @@ class MedicineDetailPage extends StatelessWidget {
                                       Text(
                                         'Price',
                                         style: TextStyle(
-                                          fontSize: 14,
-                                          color: const Color.fromARGB(255, 255, 255, 255),
+                                          fontSize: 16,
+                                          color: const Color.fromARGB(255, 1, 79, 43),
                                         ),
                                       ),
-                                      const SizedBox(height: 4),
+                                      const SizedBox(height: 2),
                                       Text(
                                         '৳${medicine['price'] ?? 'N/A'}',
                                         style: TextStyle(
                                           fontSize: 28,
                                           fontWeight: FontWeight.bold,
-                                          color: const Color.fromARGB(255, 255, 255, 255),
+                                          color: const Color.fromARGB(255, 1, 79, 43),
                                         ),
                                       ),
                                     ],
@@ -162,7 +162,7 @@ class MedicineDetailPage extends StatelessWidget {
                               )
                               ],
                             ),
-
+                            const SizedBox(height: 10),
                             // Manufacturer Information
                             _buildInfoSection(
                               'Manufacturer',
