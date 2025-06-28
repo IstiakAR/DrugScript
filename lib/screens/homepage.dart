@@ -103,10 +103,6 @@ class _HomePageState extends State<HomePage> {
                                                         color: Colors.black54,
                                                       ),
                                                     ),
-                                                    // EXAMPLE: TextField (safe inside SizedBox)
-                                                    // TextField(
-                                                    //   decoration: InputDecoration(labelText: "Demo Field"),
-                                                    // ),
                                                   ],
                                                 ),
                                               ),
@@ -233,6 +229,18 @@ class _HomePageState extends State<HomePage> {
                     Icons.share_outlined,
                     Color.fromARGB(255, 55, 93, 175),
                     '/sharingHistory',
+                  ),
+                  _buildActionCard(
+                    'Community Chat',
+                    Icons.forum,
+                    Color.fromARGB(255, 100, 149, 237),
+                    '/communityChat',
+                  ),                  
+                  _buildActionCard(
+                    'Reviews',
+                    Icons.forum,
+                    Color.fromARGB(255, 217, 219, 90),
+                    '/reviews',
                   ),
                 ],
               ),
