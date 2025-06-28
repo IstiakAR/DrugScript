@@ -14,6 +14,38 @@ class ApiService {
   // Cache duration (30 days for persistent cache)
   static const Duration _cacheDuration = Duration(days: 30);
 
+  // Auth login method - handles login/register with Firebase token
+  Future<Map<String, dynamic>?> authLogin() async {
+    try {
+      // Get the Firebase ID token
+      final idToken = await _authService.getIdToken();
+      if (idToken == null) {
+        throw Exception('User not authenticated');
+      }
+
+      // Make the API call
+      final response = await http.post(
+        Uri.parse('${AppConstants.baseUrl}/profile/auth-login'),
+        headers: {
+          'Authorization': 'Bearer $idToken',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print('Login successful: ${data['message']}');
+        print('Is new user: ${data['is_new_user']}');
+        return data;
+      } else {
+        throw Exception('Login failed: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      print('Auth login error: $e');
+      return null;
+    }
+  }
+
   // Clear cache for current user
   Future<void> clearCache() async {
     final user = _authService.currentUser;
@@ -142,18 +174,22 @@ class ApiService {
       final token = await _authService.getIdToken();
 
       final Map<String, dynamic> profileData = {
-        "name": name.trim().isEmpty ? null : name,
-        "age": age.trim().isEmpty || age == 'Not specified' ? null : age,
-        "address": address.trim().isEmpty || address == 'Not specified' ? null : address,
-        "phone": phone.trim().isEmpty || phone == 'Not specified' ? null : phone,
-        "date_of_birth": dateOfBirth.trim().isEmpty || dateOfBirth == 'Not specified' ? null : dateOfBirth,
-        "allergies": allergies?.trim().isEmpty == true || allergies == 'None' ? null : allergies,
-        "medical_conditions": medicalConditions?.trim().isEmpty == true || medicalConditions == 'None' ? null : medicalConditions,
-        "emergency_contact": emergencyContact.trim().isEmpty || emergencyContact == 'Not specified' ? null : emergencyContact,
-        "gender": gender, // <-- Add this
-        "blood_type": bloodType, // <-- And this
+        "name": name.trim().isEmpty ? null : name.trim(),
+        "age": age.trim().isEmpty || age == 'Not specified' ? null : age.trim(),
+        "address": address.trim().isEmpty || address == 'Not specified' ? null : address.trim(),
+        "phone": phone.trim().isEmpty || phone == 'Not specified' ? null : phone.trim(),
+        "date_of_birth": dateOfBirth.trim().isEmpty || dateOfBirth == 'Not specified' ? null : dateOfBirth.trim(),
+        "allergies": allergies?.trim().isEmpty == true || allergies == 'None' || allergies == 'Not specified' ? null : allergies?.trim(),
+        "medical_conditions": medicalConditions?.trim().isEmpty == true || medicalConditions == 'None' || medicalConditions == 'Not specified' ? null : medicalConditions?.trim(),
+        "emergency_contact": emergencyContact.trim().isEmpty || emergencyContact == 'Not specified' ? null : emergencyContact.trim(),
+        "gender": gender.trim().isEmpty || gender == 'Not specified' ? null : gender.trim(),
+        "blood_type": bloodType.trim().isEmpty || bloodType == 'Not specified' ? null : bloodType.trim(),
       };
 
+      // Remove null values to avoid sending them to the backend
+      profileData.removeWhere((key, value) => value == null);
+      
+      print('Final profile data being sent: $profileData'); // Debug
 
       // First check if the profile exists
       final existingProfile = await getUserProfile();

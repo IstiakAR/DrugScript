@@ -156,25 +156,45 @@ class _ProfileState extends State<Profile> {
     try {
       setState(() => _isLoading = true);
       final user = _authService.currentUser;
+      
       // Always map "Prefer not to say" to "Other" for backend
       String genderValue = _controllers['gender']!.text.trim();
       if (genderValue.toLowerCase() == 'prefer not to say') {
         genderValue = 'Other';
       }
+      
+      // Handle age - convert "Not specified" to empty string or a valid age
+      String ageValue = _controllers['age']!.text.trim();
+      if (ageValue == 'Not specified' || ageValue.isEmpty) {
+        ageValue = ''; // Send empty string instead of "Not specified"
+      }
+      
+      // Handle blood type - ensure it's a valid blood type or empty
+      String bloodTypeValue = _controllers['blood_type']!.text.trim();
+      if (bloodTypeValue == 'Not specified' || !AppConstants.bloodTypes.contains(bloodTypeValue)) {
+        bloodTypeValue = ''; // Send empty string instead of "Not specified"
+      }
+      
+      print('Sending profile data:'); // Debug
+      print('Age: "$ageValue"');
+      print('Blood Type: "$bloodTypeValue"');
+      print('Gender: "$genderValue"');
+      
       final success = await _apiService.upsertUserProfile(
         name: _controllers['name']!.text.trim().isEmpty
             ? (user?.displayName ?? 'Unknown')
             : _controllers['name']!.text.trim(),
-        age: _controllers['age']!.text.trim(),
+        age: ageValue,
         address: _controllers['address']!.text.trim(),
         gender: genderValue,
         phone: _controllers['phone']!.text.trim(),
         dateOfBirth: _controllers['date_of_birth']!.text.trim(),
-        bloodType: _controllers['blood_type']!.text.trim(),
+        bloodType: bloodTypeValue,
         allergies: _controllers['allergies']!.text.trim(),
         medicalConditions: _controllers['medical_conditions']!.text.trim(),
         emergencyContact: _controllers['emergency_contact']!.text.trim(),
       );
+      
       print('API call result: $success'); // Debug: confirm API result
       if (mounted) {
         setState(() {

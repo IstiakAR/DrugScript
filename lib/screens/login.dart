@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/api_service.dart';
 
 
 class Login extends StatefulWidget {
@@ -11,6 +12,7 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   final AuthService _authService = AuthService();
+  final ApiService _apiService = ApiService();
   bool _isLoading = false;
 
   Future<void> _signInWithGoogle() async {
@@ -19,7 +21,31 @@ class _LoginState extends State<Login> {
     });
 
     try {
-      await _authService.signInWithGoogle();
+      // First authenticate with Firebase
+      final userCredential = await _authService.signInWithGoogle();
+      
+      if (userCredential != null) {
+        // Then authenticate with your backend
+        final result = await _apiService.authLogin();
+        
+        if (result != null) {
+          final isNewUser = result['is_new_user'] ?? false;
+          
+          if (mounted) {
+            if (isNewUser) {
+              // Navigate to profile completion screen
+              Navigator.pushReplacementNamed(context, '/complete-profile');
+            } else {
+              // Navigate to main app
+              Navigator.pushReplacementNamed(context, '/home');
+            }
+          }
+        } else if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Backend authentication failed')),
+          );
+        }
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
