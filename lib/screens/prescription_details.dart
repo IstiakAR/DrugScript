@@ -78,12 +78,12 @@ class _PrescriptionDetailsState extends State<PrescriptionDetails> {
     }
   }
 
-  Future<dynamic> _fetchMedicineDetails(String slug) async {
+  Future<dynamic> _fetchMedicineDetails(Map<String, dynamic> medicine) async {
     try {
       final String? authToken = await _getAuthToken();
       final response = await http.get(
         Uri.parse(
-          'https://fastapi-app-production-6e30.up.railway.app/medicine/$slug',
+          'https://fastapi-app-production-6e30.up.railway.app/medicine/${medicine['slug']}',
         ),
         headers: {
           'Content-Type': 'application/json',
@@ -104,6 +104,36 @@ class _PrescriptionDetailsState extends State<PrescriptionDetails> {
       return null; // Return null or handle the error as needed
     }
   }
+
+  String _formatFrequency(Map<String, dynamic> frequency) {
+    String formatted = '';
+    if(frequency['morning'] == true) {
+      formatted += '1';
+    }else{
+      formatted += '0';
+    }
+
+    formatted += ' - ';
+
+    if(frequency['lunch'] == true) {
+      formatted += '1';
+    }else{
+      formatted += '0';
+    }
+
+    formatted += ' - ';
+
+    if(frequency['dinner'] == true) {
+      formatted += '1';
+    }else{
+      formatted += '0';
+    }
+
+    print('Formatted frequency: $formatted');
+
+    return formatted;
+  }
+
 
   Widget _buildSectionCard(String title, Widget content) {
     return Container(
@@ -320,6 +350,9 @@ class _PrescriptionDetailsState extends State<PrescriptionDetails> {
                                   highlightColor: Colors.grey.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(2.0),
                                   onTap: () {
+                                    print(
+                                      "CAmeraaaaaaaaaaaaaa here  asdddddddddddd",
+                                    );
                                     _fetchMedicineDetails(medicine).then((
                                       medicineDetails,
                                     ) {
@@ -340,7 +373,7 @@ class _PrescriptionDetailsState extends State<PrescriptionDetails> {
                                         ).showSnackBar(
                                           SnackBar(
                                             content: Text(
-                                              'Failed to load details for $medicine',
+                                              'Failed to load details for medicine',
                                             ),
                                           ),
                                         );
@@ -357,12 +390,36 @@ class _PrescriptionDetailsState extends State<PrescriptionDetails> {
                                         ),
                                         const SizedBox(width: 10),
                                         Expanded(
-                                          child: Text(
-                                            medicine,
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w500,
-                                            ),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                medicine['slug'],
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+
+                                              if (medicine['days'] != null)
+                                                Text(
+                                                  'Days: ${medicine['days']}',
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    color: Colors.grey[600],
+                                                  ),
+                                                ),
+
+                                              if (medicine['frequency'] != null)
+                                                Text(
+                                                  'Frequency: ${_formatFrequency(medicine['frequency'])}',
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    color: Colors.grey[600],
+                                                  ),
+                                                ),
+                                            ],
                                           ),
                                         ),
                                         Icon(
