@@ -49,4 +49,19 @@ class ChatService {
     }
     return null;
   }
+
+  Future<Map<String, dynamic>?> getUserDetails(String userId) async {
+    final token = await _authService.getIdToken();
+    final response = await http.get(
+      Uri.parse('${AppConstants.baseUrl}/profile/public/$userId'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+    return null;
+  }
 }

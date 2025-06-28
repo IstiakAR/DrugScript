@@ -22,6 +22,8 @@ class _ChatPageState extends State<ChatPage> {
   String? currentUserId;
   static const String _cacheKey = 'cached_messages';
 
+  Map<String, Map<String, dynamic>> userCache = {};
+
   @override
   void initState() {
     super.initState();
@@ -83,11 +85,11 @@ class _ChatPageState extends State<ChatPage> {
     final messageContent = _messageController.text.trim();
     _messageController.clear();
 
-    // Create temporary message for immediate display
+    // Create temporary message for immediate display with current local time
     final tempMessage = {
       'content': messageContent,
       'sender_id': currentUserId,
-      'timestamp': DateTime.now().toIso8601String(),
+      'timestamp': DateTime.now().toIso8601String(), // Keep as local time for temp message
       'temp_id': DateTime.now().millisecondsSinceEpoch.toString(),
     };
 
@@ -138,6 +140,39 @@ class _ChatPageState extends State<ChatPage> {
           SnackBar(content: Text('Failed to send message: $e')),
         );
       }
+    }
+  }
+
+  Future<Map<String, dynamic>> _getUserInfo(String userId) async {
+    // Check cache first
+    if (userCache.containsKey(userId)) {
+      return userCache[userId]!;
+    }
+
+    // For current user, get info from AuthService
+    if (userId == currentUserId) {
+      final user = _authService.currentUser;
+      final userInfo = {
+        'name': user?.displayName ?? 'You',
+      };
+      userCache[userId] = userInfo;
+      return userInfo;
+    }
+
+    // For other users, fetch from API
+    try {
+      final userDetails = await _chatService.getUserDetails(userId);
+      final userInfo = {
+        'name': userDetails?['name'] ?? 'Unknown User',
+      };
+      userCache[userId] = userInfo;
+      return userInfo;
+    } catch (e) {
+      final fallbackInfo = {
+        'name': 'Unknown User',
+      };
+      userCache[userId] = fallbackInfo;
+      return fallbackInfo;
     }
   }
 
@@ -214,105 +249,123 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildMessageBubble(String content, bool isMe, String senderId, String timestamp, bool isTemp) {
-    return Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.75,
-        ),
-        decoration: BoxDecoration(
-          color: isMe 
-              ? (isTemp ? const Color.fromARGB(200, 100, 149, 237) : const Color.fromARGB(255, 100, 149, 237))
-              : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              spreadRadius: 1,
-              blurRadius: 3,
-              offset: const Offset(0, 1),
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _getUserInfo(senderId),
+      builder: (context, snapshot) {
+        final userInfo = snapshot.data ?? {'name': 'Loading...'};
+        final userName = userInfo['name'] as String;
+
+        return Align(
+          alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+          child: Container(
+            margin: const EdgeInsets.symmetric(vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.75,
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (!isMe)
-              Text(
-                senderId.length > 8 ? '${senderId.substring(0, 8)}...' : senderId,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
+            decoration: BoxDecoration(
+              color: isMe 
+                  ? (isTemp ? const Color.fromARGB(200, 100, 149, 237) : const Color.fromARGB(255, 100, 149, 237))
+                  : Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  spreadRadius: 1,
+                  blurRadius: 3,
+                  offset: const Offset(0, 1),
                 ),
-              ),
-            const SizedBox(height: 2),
-            Row(
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Flexible(
-                  child: Text(
-                    content,
+                if (!isMe)
+                  Text(
+                    userName,
                     style: TextStyle(
-                      color: isMe ? Colors.white : Colors.black87,
-                      fontSize: 16,
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
+                if (!isMe) const SizedBox(height: 2),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        content,
+                        style: TextStyle(
+                          color: isMe ? Colors.white : Colors.black87,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                    if (isMe && isTemp) ...[
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white.withOpacity(0.7),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-                if (isMe && isTemp) ...[
-                  const SizedBox(width: 8),
-                  SizedBox(
-                    width: 12,
-                    height: 12,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        Colors.white.withOpacity(0.7),
+                if (timestamp.isNotEmpty && !isTemp)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      _formatTimestamp(timestamp),
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: isMe ? Colors.white70 : Colors.grey[500],
                       ),
                     ),
                   ),
-                ],
               ],
             ),
-            if (timestamp.isNotEmpty && !isTemp)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  _formatTimestamp(timestamp),
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: isMe ? Colors.white70 : Colors.grey[500],
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
-  String _formatTimestamp(String timestamp) {
-    try {
-      final dateTime = DateTime.parse(timestamp);
-      final now = DateTime.now();
-      final difference = now.difference(dateTime);
-      
-      if (difference.inDays > 0) {
-        return '${difference.inDays}d ago';
-      } else if (difference.inHours > 0) {
-        return '${difference.inHours}h ago';
-      } else if (difference.inMinutes > 0) {
-        return '${difference.inMinutes}m ago';
-      } else {
-        return 'Just now';
-      }
-    } catch (e) {
-      return timestamp;
+String _formatTimestamp(String timestamp) {
+  try {
+    DateTime dateTime;
+
+    if (timestamp.contains('+') || timestamp.endsWith('Z')) {
+      // Server timestamp with timezone info
+      dateTime = DateTime.parse(timestamp).toLocal();
+    } else {
+      // Might be stored in UTC without zone, force parse as UTC then convert
+      dateTime = DateTime.parse(timestamp).toUtc().add(const Duration(hours: 6));
     }
+
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.isNegative || difference.inMinutes < 1) {
+      return 'Just now';
+    } else if (difference.inMinutes < 60) {
+      return '${difference.inMinutes}m ago';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours}h ago';
+    } else {
+      return '${difference.inDays}d ago';
+    }
+  } catch (e) {
+    return 'Unknown time';
   }
+}
+
 
   Widget _buildMessageInput() {
     return Container(
