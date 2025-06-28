@@ -532,74 +532,88 @@ if (_showPreviousReports) {
     );
   }
 
-  Widget _buildVisitHistory() {
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Visit History',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF4A637D),
-              ),
+  Widget _buildVisitHistory(BuildContext context) {
+  return Card(
+    elevation: 4,
+    child: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Visit History',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF4A637D),
             ),
-            const SizedBox(height: 16),
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _previousVisits.length,
-              separatorBuilder: (_, __) => const Divider(),
-              itemBuilder: (context, index) {
-                final visit = _previousVisits[index];
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: const Color(0xFFD0E8FF),
-                    child: Text(
-                      '${index + 1}',
-                      style: const TextStyle(
-                        color: Color(0xFF4A637D),
-                        fontWeight: FontWeight.bold,
-                      ),
+          ),
+          const SizedBox(height: 16),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _previousVisits.length,
+            separatorBuilder: (_, __) => const Divider(),
+            itemBuilder: (context, index) {
+              final visit = _previousVisits[index];
+              return ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: const Color(0xFFD0E8FF),
+                  child: Text(
+                    '${index + 1}',
+                    style: const TextStyle(
+                      color: Color(0xFF4A637D),
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  title: Text(visit['date']),
-                  subtitle: Text('${visit['doctor']} - ${visit['reason']}'),
-                  trailing: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color:
-                          visit['status'] == 'Completed'
-                              ? Colors.green.withOpacity(0.2)
-                              : Colors.orange.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      visit['status'],
-                      style: TextStyle(
-                        color:
-                            visit['status'] == 'Completed'
-                                ? Colors.green
-                                : Colors.orange,
-                        fontSize: 12,
-                      ),
+                ),
+                title: Text(visit['date']),
+                subtitle: Text('${visit['doctor']} - ${visit['reason']}'),
+                trailing: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: visit['status'] == 'Completed'
+                        ? Colors.green.withOpacity(0.2)
+                        : Colors.orange.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    visit['status'],
+                    style: TextStyle(
+                      color: visit['status'] == 'Completed'
+                          ? Colors.green
+                          : Colors.orange,
+                      fontSize: 12,
                     ),
                   ),
-                );
-              },
-            ),
-          ],
-        ),
+                ),
+                // Add onTap to show report dialog
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      title: Text('Doctor\'s Report'),
+                      content: Text(visit['report'] ?? 'No report provided.'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Close'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -698,7 +712,7 @@ if (_showPreviousReports) {
           ),
           SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
-            child: _buildVisitHistory(),
+            child: _buildVisitHistory(context),
           ),
         ],
       ),
