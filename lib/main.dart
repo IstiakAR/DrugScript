@@ -10,7 +10,7 @@ import 'package:drugscript/theme/app_theme.dart';
 import 'package:drugscript/screens/splash_screen.dart';
 import 'package:drugscript/screens/scan_qr_page.dart';
 import 'package:drugscript/screens/sharing_history.dart';
-import 'package:drugscript/screens/community_chat.dart';
+import 'package:drugscript/screens/chat_page.dart';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -72,8 +72,8 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(builder: (_) => const ScanQrPage());
           case '/sharingHistory':
             return MaterialPageRoute(builder: (_) => const SharingHistory());
-          case '/communityChat':
-            return MaterialPageRoute(builder: (_) => const CommunityChatPage());
+          case '/chatPage':
+            return MaterialPageRoute(builder: (_) => const ChatPage());
           case '/reviews':
             // return MaterialPageRoute(builder: (_) => const ReviewsPage());
             return null;

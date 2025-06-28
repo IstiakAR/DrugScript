@@ -1,0 +1,380 @@
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import '../services/chat_service.dart';
+import '../services/auth_service.dart';
+
+class ChatPage extends StatefulWidget {
+  const ChatPage({super.key});
+
+  @override
+  State<ChatPage> createState() => _ChatPageState();
+}
+
+class _ChatPageState extends State<ChatPage> {
+  final ChatService _chatService = ChatService();
+  final AuthService _authService = AuthService();
+  final TextEditingController _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  
+  List<dynamic> messages = [];
+  bool isLoading = true;
+  String? currentUserId;
+  static const String _cacheKey = 'cached_messages';
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeChat();
+  }
+
+  Future<void> _initializeChat() async {
+    final user = _authService.currentUser;
+    currentUserId = user?.uid;
+    await _loadCachedMessages();
+    await _loadMessages();
+  }
+
+  Future<void> _loadCachedMessages() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cachedData = prefs.getString(_cacheKey);
+      if (cachedData != null) {
+        final cachedMessages = jsonDecode(cachedData) as List;
+        setState(() {
+          messages = cachedMessages;
+          isLoading = false;
+        });
+        _scrollToBottom();
+      }
+    } catch (e) {
+      print('Error loading cached messages: $e');
+    }
+  }
+
+  Future<void> _cacheMessages() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_cacheKey, jsonEncode(messages));
+    } catch (e) {
+      print('Error caching messages: $e');
+    }
+  }
+
+  Future<void> _loadMessages() async {
+    try {
+      final fetchedMessages = await _chatService.getMessages();
+      setState(() {
+        messages = fetchedMessages;
+        isLoading = false;
+      });
+      await _cacheMessages();
+      _scrollToBottom();
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _sendMessage() async {
+    if (_messageController.text.trim().isEmpty || currentUserId == null) return;
+
+    final messageContent = _messageController.text.trim();
+    _messageController.clear();
+
+    // Create temporary message for immediate display
+    final tempMessage = {
+      'content': messageContent,
+      'sender_id': currentUserId,
+      'timestamp': DateTime.now().toIso8601String(),
+      'temp_id': DateTime.now().millisecondsSinceEpoch.toString(),
+    };
+
+    // Add message immediately to UI
+    setState(() {
+      messages.add(tempMessage);
+    });
+    _scrollToBottom();
+
+    try {
+      final success = await _chatService.sendMessage(currentUserId!, messageContent);
+      if (success) {
+        // Find and update the temporary message instead of removing it
+        final tempIndex = messages.indexWhere((msg) => msg['temp_id'] == tempMessage['temp_id']);
+        if (tempIndex != -1) {
+          // Try to get the latest message from server
+          final latestMessage = await _chatService.getLatestMessage();
+          if (latestMessage != null && latestMessage['content'] == messageContent) {
+            setState(() {
+              messages[tempIndex] = latestMessage;
+            });
+          } else {
+            // If can't get latest, just remove temp_id to make it permanent
+            setState(() {
+              messages[tempIndex].remove('temp_id');
+            });
+          }
+          await _cacheMessages();
+        }
+      } else {
+        // Remove temp message on failure
+        setState(() {
+          messages.removeWhere((msg) => msg['temp_id'] == tempMessage['temp_id']);
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to send message')),
+          );
+        }
+      }
+    } catch (e) {
+      // Remove temp message on error
+      setState(() {
+        messages.removeWhere((msg) => msg['temp_id'] == tempMessage['temp_id']);
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to send message: $e')),
+        );
+      }
+    }
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        title: const Text(
+          'Community Chat',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: const Color.fromARGB(255, 100, 149, 237),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pushReplacementNamed(context, '/homePage'),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadMessages,
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: isLoading && messages.isEmpty
+                ? const Center(child: CircularProgressIndicator())
+                : messages.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'No messages yet. Start the conversation!',
+                          style: TextStyle(fontSize: 16, color: Colors.grey),
+                        ),
+                      )
+                    : ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.all(16),
+                        itemCount: messages.length,
+                        itemBuilder: (context, index) {
+                          final message = messages[index];
+                          final isMe = message['sender_id'] == currentUserId;
+                          final isTemp = message.containsKey('temp_id');
+                          
+                          return _buildMessageBubble(
+                            message['content'] ?? '',
+                            isMe,
+                            message['sender_id'] ?? 'Unknown',
+                            message['timestamp'] ?? '',
+                            isTemp,
+                          );
+                        },
+                      ),
+          ),
+          _buildMessageInput(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMessageBubble(String content, bool isMe, String senderId, String timestamp, bool isTemp) {
+    return Align(
+      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.75,
+        ),
+        decoration: BoxDecoration(
+          color: isMe 
+              ? (isTemp ? const Color.fromARGB(200, 100, 149, 237) : const Color.fromARGB(255, 100, 149, 237))
+              : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 3,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (!isMe)
+              Text(
+                senderId.length > 8 ? '${senderId.substring(0, 8)}...' : senderId,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            const SizedBox(height: 2),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    content,
+                    style: TextStyle(
+                      color: isMe ? Colors.white : Colors.black87,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                if (isMe && isTemp) ...[
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 12,
+                    height: 12,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Colors.white.withOpacity(0.7),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            if (timestamp.isNotEmpty && !isTemp)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  _formatTimestamp(timestamp),
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: isMe ? Colors.white70 : Colors.grey[500],
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatTimestamp(String timestamp) {
+    try {
+      final dateTime = DateTime.parse(timestamp);
+      final now = DateTime.now();
+      final difference = now.difference(dateTime);
+      
+      if (difference.inDays > 0) {
+        return '${difference.inDays}d ago';
+      } else if (difference.inHours > 0) {
+        return '${difference.inHours}h ago';
+      } else if (difference.inMinutes > 0) {
+        return '${difference.inMinutes}m ago';
+      } else {
+        return 'Just now';
+      }
+    } catch (e) {
+      return timestamp;
+    }
+  }
+
+  Widget _buildMessageInput() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _messageController,
+              decoration: InputDecoration(
+                hintText: 'Type a message...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25),
+                  borderSide: BorderSide.none,
+                ),
+                filled: true,
+                fillColor: Colors.grey[100],
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+              ),
+              maxLines: null,
+              onSubmitted: (_) => _sendMessage(),
+            ),
+          ),
+          const SizedBox(width: 12),
+          GestureDetector(
+            onTap: _sendMessage,
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                color: Color.fromARGB(255, 100, 149, 237),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.send,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+}

@@ -234,7 +234,7 @@ class _HomePageState extends State<HomePage> {
                     'Community Chat',
                     Icons.forum,
                     Color.fromARGB(255, 100, 149, 237),
-                    '/communityChat',
+                    '/chatPage',
                   ),                  
                   _buildActionCard(
                     'Reviews',
