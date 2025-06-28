@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_print
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -19,7 +20,40 @@ class _AddPrescriptionState extends State<AddPrescription> {
   final TextEditingController _doctorNameController = TextEditingController();
   final TextEditingController _contactController = TextEditingController();
 
-  
+  // Helper method to build timing buttons
+  Widget _buildTimingButton({
+    required BuildContext context,
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onPressed,
+    required String tooltip,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(4),
+        child: Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color:
+                isSelected
+                    ? const Color.fromARGB(255, 47, 47, 49)
+                    : const Color.fromARGB(255, 214, 214, 214),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Icon(
+            icon,
+            size: 26,
+            color:
+                isSelected
+                    ? Colors.white
+                    : const Color.fromARGB(255, 45, 45, 45),
+          ),
+        ),
+      ),
+    );
+  }
 
   // State variables
   List<Map<String, dynamic>> selectedMedicines = [];
@@ -71,9 +105,6 @@ class _AddPrescriptionState extends State<AddPrescription> {
     'Other',
   ];
 
-    
-
-
   // Function to handle image picking
   Future<void> _getImage(ImageSource source) async {
     final picker = ImagePicker();
@@ -86,139 +117,140 @@ class _AddPrescriptionState extends State<AddPrescription> {
     }
   }
 
-
   // Show options for image selection
   void _showImageSourceOptions() {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              spreadRadius: 0,
+      builder:
+          (context) => Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  spreadRadius: 0,
+                ),
+              ],
             ),
-          ],
-        ),
 
-        child: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Handle indicator
-              Container(
-                width: 40,
-                height: 4,
-                margin: EdgeInsets.only(bottom: 20),
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              // Title
-              Padding(
-                padding: EdgeInsets.only(bottom: 16.0),
-                child: Text(
-                  'Select Image Source',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              // Camera option
-              _buildOptionTile(
-                icon: Icons.camera_alt,
-                iconColor: Colors.blue,
-                title: 'Take a Photo',
-                subtitle: 'Use your camera to capture a new image',
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _getImage(ImageSource.camera);
-                },
-              ),
-              SizedBox(height: 12),
-              // Gallery option
-              _buildOptionTile(
-                icon: Icons.photo_library,
-                iconColor: Colors.green,
-                title: 'Choose from Gallery',
-                subtitle: 'Select an existing image from your device',
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _getImage(ImageSource.gallery);
-                },
-              ),
-              SizedBox(height: 20),
-              // Cancel button
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    backgroundColor: Colors.grey[200],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Handle indicator
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                  child: Text(
-                    'Cancel',
-                    style: TextStyle(color: Colors.black87),
+                  // Title
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 16.0),
+                    child: Text(
+                      'Select Image Source',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                ),
+                  // Camera option
+                  _buildOptionTile(
+                    icon: Icons.camera_alt,
+                    iconColor: Colors.blue,
+                    title: 'Take a Photo',
+                    subtitle: 'Use your camera to capture a new image',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      _getImage(ImageSource.camera);
+                    },
+                  ),
+                  SizedBox(height: 12),
+                  // Gallery option
+                  _buildOptionTile(
+                    icon: Icons.photo_library,
+                    iconColor: Colors.green,
+                    title: 'Choose from Gallery',
+                    subtitle: 'Select an existing image from your device',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      _getImage(ImageSource.gallery);
+                    },
+                  ),
+                  SizedBox(height: 20),
+                  // Cancel button
+                  SizedBox(
+                    width: double.infinity,
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        backgroundColor: Colors.grey[200],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(color: Colors.black87),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                ],
               ),
-              SizedBox(height: 10),
-            ],
+            ),
           ),
-        ),
-      ),
     );
   }
-
-
 
   // Navigate to medicine search and handle selection
   Future<void> _navigateToMedicineSearch() async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const MedicineSearchApp(
-        selectionMode: true, // Enable selection mode
-      )),
+        builder:
+            (context) => const MedicineSearchApp(
+              selectionMode: true, // Enable selection mode
+            ),
+      ),
     );
 
-    print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+    print(
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    );
     print("getttttting $result"); // Debugging line to check the result
 
     if (result != null && result is Map<String, dynamic>) {
       setState(() {
         // Check if medicine is already in the list
-          bool alreadyExists = selectedMedicines.any(
-            (medicine) => medicine['medicine_name'] == result['medicine_name']
+        bool alreadyExists = selectedMedicines.any(
+          (medicine) => medicine['medicine_name'] == result['medicine_name'],
+        );
+
+        if (!alreadyExists) {
+          selectedMedicines.add(result);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('This medicine is already added'),
+              duration: Duration(seconds: 1),
+            ),
           );
-          
-          if (!alreadyExists) {
-            selectedMedicines.add(result);
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('This medicine is already added'),
-                duration: Duration(seconds: 1),
-              ),
-            );
-          }
         }
-      );
+      });
     }
   }
 
@@ -229,7 +261,6 @@ class _AddPrescriptionState extends State<AddPrescription> {
       print(selectedMedicines);
     });
   }
-
 
   Future<String?> _getAuthToken() async {
     User? user = FirebaseAuth.instance.currentUser;
@@ -247,7 +278,7 @@ class _AddPrescriptionState extends State<AddPrescription> {
       return;
     }
 
-    if(_selectedDate == null) {
+    if (_selectedDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a prescription date')),
       );
@@ -268,15 +299,11 @@ class _AddPrescriptionState extends State<AddPrescription> {
       return;
     }
 
-
-
-
     setState(() {
       isLoading = true;
     });
 
     try {
-
       String base64Image = '';
       if (prescriptionImage != null) {
         List<int> imageBytes =
@@ -297,11 +324,13 @@ class _AddPrescriptionState extends State<AddPrescription> {
       final Map<String, dynamic> payload = {
         'doctor_name': _doctorNameController.text,
         'contact': _contactController.text,
-        'medicines': medicineSlugs, // Make sure this is a list of maps/dictionaries
+        'medicines':
+            medicineSlugs, // Make sure this is a list of maps/dictionaries
         'image': base64Image,
-        'date' : _selectedDate != null
-            ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
-            : null,
+        'date':
+            _selectedDate != null
+                ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
+                : null,
         'diagnosis': _selectedDiagnosis,
         'created_by': FirebaseAuth.instance.currentUser?.uid,
       };
@@ -334,18 +363,15 @@ class _AddPrescriptionState extends State<AddPrescription> {
           // Reset form
           _doctorNameController.clear();
           _contactController.clear();
-          
-          FocusScope.of(context).unfocus(); 
+
+          FocusScope.of(context).unfocus();
 
           Navigator.pushReplacementNamed(context, '/homePage');
-
 
           setState(() {
             selectedMedicines = [];
             prescriptionImage = null;
           });
-
-
         }
       } else {
         // Error
@@ -376,12 +402,13 @@ class _AddPrescriptionState extends State<AddPrescription> {
     super.dispose();
   }
 
+  Timer? _decrementTimer;
+  Timer? _incrementTimer;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        
         title: const Text(
           'Add Prescription',
           style: TextStyle(
@@ -392,8 +419,8 @@ class _AddPrescriptionState extends State<AddPrescription> {
         ),
 
         leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.pushReplacementNamed(context, '/homePage'),
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pushReplacementNamed(context, '/homePage'),
         ),
 
         actions: [
@@ -404,24 +431,25 @@ class _AddPrescriptionState extends State<AddPrescription> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color.fromARGB(255, 47, 47, 49),
                 foregroundColor: Colors.white,
-                elevation: 1
+                elevation: 1,
               ),
-              child: isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2.0,
+              child:
+                  isLoading
+                      ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2.0,
+                        ),
+                      )
+                      : const Text(
+                        'Create',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    )
-                  : const Text(
-                      'Create',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    )
             ),
           ),
         ],
@@ -434,10 +462,7 @@ class _AddPrescriptionState extends State<AddPrescription> {
           children: [
             const Text(
               'Doctor Information',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             TextField(
@@ -465,10 +490,7 @@ class _AddPrescriptionState extends State<AddPrescription> {
             // Date selection
             const Text(
               'Prescription Date',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 8),
@@ -500,9 +522,10 @@ class _AddPrescriptionState extends State<AddPrescription> {
               child: AbsorbPointer(
                 child: TextField(
                   controller: TextEditingController(
-                    text: _selectedDate != null
-                        ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
-                        : '',
+                    text:
+                        _selectedDate != null
+                            ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
+                            : '',
                   ),
                   decoration: InputDecoration(
                     labelText: 'Select Date',
@@ -519,16 +542,12 @@ class _AddPrescriptionState extends State<AddPrescription> {
               ),
             ),
 
-
             const SizedBox(height: 8),
 
             // Diagnosis selection
             const Text(
               'Diagnosis',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
 
@@ -540,7 +559,10 @@ class _AddPrescriptionState extends State<AddPrescription> {
               ),
               child: DropdownButtonFormField<String>(
                 decoration: InputDecoration(
-                  contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 15,
+                    vertical: 5,
+                  ),
                   border: InputBorder.none,
                 ),
                 hint: Text('Select Diagnosis'),
@@ -548,23 +570,28 @@ class _AddPrescriptionState extends State<AddPrescription> {
                 value: _selectedDiagnosis,
                 icon: Icon(Icons.arrow_drop_down_circle_outlined),
                 elevation: 26,
-                style: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.black87,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
                 onChanged: (String? newValue) {
                   setState(() {
                     _selectedDiagnosis = newValue;
                   });
                 },
-                items: _diagnosis.map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
+                items:
+                    _diagnosis.map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
               ),
             ),
 
             const SizedBox(height: 10),
-            
+
             // Add original prescription button
             Container(
               decoration: BoxDecoration(
@@ -597,7 +624,11 @@ class _AddPrescriptionState extends State<AddPrescription> {
                             color: const Color.fromARGB(255, 47, 47, 49),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.camera_alt_outlined, color: Color.fromARGB(255, 255, 255, 255), size: 30),
+                          child: const Icon(
+                            Icons.camera_alt_outlined,
+                            color: Color.fromARGB(255, 255, 255, 255),
+                            size: 30,
+                          ),
                         ),
                         const SizedBox(width: 15),
                         const Text(
@@ -614,7 +645,7 @@ class _AddPrescriptionState extends State<AddPrescription> {
                 ),
               ),
             ),
-            
+
             // Show prescription image if selected
             if (prescriptionImage != null) ...[
               const SizedBox(height: 16),
@@ -663,9 +694,9 @@ class _AddPrescriptionState extends State<AddPrescription> {
                 ),
               ),
             ],
-            
+
             const SizedBox(height: 8),
-            
+
             // Add medicine button
             Container(
               decoration: BoxDecoration(
@@ -691,7 +722,11 @@ class _AddPrescriptionState extends State<AddPrescription> {
                             color: const Color.fromARGB(255, 47, 47, 49),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.medication, color: Color.fromARGB(255, 255, 255, 255), size: 30),
+                          child: const Icon(
+                            Icons.medication,
+                            color: Color.fromARGB(255, 255, 255, 255),
+                            size: 30,
+                          ),
                         ),
                         const SizedBox(width: 12),
                         const Text(
@@ -708,73 +743,252 @@ class _AddPrescriptionState extends State<AddPrescription> {
                 ),
               ),
             ),
-            
+
             // List of selected medicines
             if (selectedMedicines.isNotEmpty) ...[
               const SizedBox(height: 24),
               const Text(
                 'Selected Medicines',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: selectedMedicines.length,
+
                 itemBuilder: (context, index) {
                   final medicine = selectedMedicines[index];
+
                   return Card(
                     margin: const EdgeInsets.symmetric(vertical: 6),
                     elevation: 1,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.all(12),
-                      title: Text(
-                        medicine['medicine_name'],
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      subtitle: Column(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 4),
-                          Text('${medicine['generic_name']} ${medicine['strength']}'),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  medicine['medicine_name'],
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                              ),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    '৳${medicine['price']}',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                      color: const Color.fromARGB(255,0,145,153,),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.delete,
+                                      color: Color.fromARGB(255, 255, 54, 54),
+                                    ),
+                                    onPressed: () => _removeMedicine(index),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                           const SizedBox(height: 2),
                           Text(
-                            'Manufacturer: ${medicine['manufacturer_name']}',
+                            '${medicine['generic_name']} ${medicine['strength']}',
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            medicine['manufacturer_name'],
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey.shade700,
                             ),
                           ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              // Timing buttons (morning, lunch, dinner)
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _buildTimingButton(
+                                    context: context,
+                                    icon: Icons.wb_sunny_outlined,
+                                    isSelected: medicine['morning'] == true,
+                                    onPressed: () {
+                                      setState(() {
+                                        medicine['morning'] =
+                                            !(medicine['morning'] ?? false);
+                                      });
+                                    },
+                                    tooltip: 'Morning',
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _buildTimingButton(
+                                    context: context,
+                                    icon: Icons.lunch_dining_outlined,
+                                    isSelected: medicine['lunch'] == true,
+                                    onPressed: () {
+                                      setState(() {
+                                        medicine['lunch'] =
+                                            !(medicine['lunch'] ?? false);
+                                      });
+                                    },
+                                    tooltip: 'Lunch',
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _buildTimingButton(
+                                    context: context,
+                                    icon: Icons.nightlight_outlined,
+                                    isSelected: medicine['dinner'] == true,
+                                    onPressed: () {
+                                      setState(() {
+                                        medicine['dinner'] =
+                                            !(medicine['dinner'] ?? false);
+                                      });
+                                    },
+                                    tooltip: 'Dinner',
+                                  ),
+                                ],
+                              ),
+                              // Days selector
+                              Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: Colors.grey.shade300,
+                                  ),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          int days = medicine['days'] ?? 1;
+                                          if (days > 1) {
+                                            medicine['days'] = days - 1;
+                                          }
+                                        });
+                                      },
+                                      
+                                      onDoubleTap: () {
+                                        setState(() {
+                                          medicine['days'] = 1;
+                                        });
+                                      },
+
+                                      onLongPressStart: (_) {
+                                        _decrementTimer = Timer.periodic(
+                                          const Duration(milliseconds: 100),
+                                          (timer) {
+                                            setState(() {
+                                              int days = medicine['days'] ?? 1;
+                                              if (days > 1) {
+                                                medicine['days'] = days - 1;
+                                              } else {
+                                                _decrementTimer?.cancel();
+                                              }
+                                            });
+                                          },
+                                        );
+                                      },
+                                      onLongPressEnd: (_) {
+                                        _decrementTimer?.cancel();
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 6,
+                                          vertical: 2,
+                                        ),
+                                        child: const Icon(
+                                          Icons.remove,
+                                          size: 30,
+                                        ),
+                                      ),
+                                    ),
+
+                                    Container(
+                                      constraints: BoxConstraints(minWidth: 50),
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        '${medicine['days'] ?? 1} days',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+
+                                    GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          int days = medicine['days'] ?? 1;
+                                          if (days > 1) {
+                                            medicine['days'] = days + 1;
+                                          }
+                                        });
+                                      },
+
+                                      onDoubleTap: () {
+                                        setState(() {
+                                          medicine['days'] += 30;
+                                        });
+                                      },
+
+                                      onLongPressStart: (_) {
+                                        _incrementTimer = Timer.periodic(
+                                          const Duration(milliseconds: 100),
+                                          (timer) {
+                                            setState(() {
+                                              int days = medicine['days'] ?? 1;
+                                              if (days >= 1) {
+                                                medicine['days'] = days + 1;
+                                              } else {
+                                                _incrementTimer?.cancel();
+                                              }
+                                            });
+                                          },
+                                        );
+                                      },
+                                      onLongPressEnd: (_) {
+                                        _incrementTimer?.cancel();
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 6,
+                                          vertical: 2,
+                                        ),
+                                        child: const Icon(
+                                          Icons.add,
+                                          size: 30,
+                                        ),
+                                      ),
+                                    ),
+
+
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            '৳${medicine['price']}',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: Colors.blue.shade800,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          IconButton(
-                            icon: const Icon(Icons.delete, color: Color.fromARGB(255, 255, 106, 106)),
-                            onPressed: () => _removeMedicine(index),
-                          ),
-                        ],
-                      ),
-                      onTap: null,
                     ),
                   );
                 },
@@ -822,7 +1036,10 @@ Widget _buildOptionTile({
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
