@@ -57,47 +57,90 @@ class _HomePageState extends State<HomePage> {
                   Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.qr_code, size: 28, color: Color.fromARGB(255, 47, 47, 49)),
+                        icon: const Icon(
+                          Icons.qr_code,
+                          size: 28,
+                          color: Color.fromARGB(255, 47, 47, 49),
+                        ),
                         tooltip: "Show My QR Code",
-                        onPressed: userId == null
-                            ? null
-                            : () {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    title: const Text('My QR Code'),
-                                    content: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        QrImageView(
-                                          data: 'USERID-$userId',
-                                          version: QrVersions.auto,
-                                          size: 180.0,
+                        onPressed:
+                            userId == null
+                                ? null
+                                : () {
+                                  showDialog(
+                                    context: context,
+                                    builder:
+                                        (context) => AlertDialog(
+                                          title: const Text('My QR Code'),
+                                          content: SingleChildScrollView(
+                                            child: Center(
+                                              child: SizedBox(
+                                                width:
+                                                    MediaQuery.of(
+                                                      context,
+                                                    ).size.width *
+                                                    0.8, // 80% of screen width
+                                                child: Column(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    QrImageView(
+                                                      data: 'USERID-$userId',
+                                                      version: QrVersions.auto,
+                                                      size:
+                                                          MediaQuery.of(
+                                                            context,
+                                                          ).size.width *
+                                                          0.6,
+                                                      backgroundColor:
+                                                          Colors.white,
+                                                    ),
+                                                    const SizedBox(height: 12),
+                                                    Text(
+                                                      "ID: $userId",
+                                                      style: const TextStyle(
+                                                        fontSize: 14,
+                                                        color: Colors.black54,
+                                                      ),
+                                                    ),
+                                                    // EXAMPLE: TextField (safe inside SizedBox)
+                                                    // TextField(
+                                                    //   decoration: InputDecoration(labelText: "Demo Field"),
+                                                    // ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed:
+                                                  () =>
+                                                      Navigator.of(
+                                                        context,
+                                                      ).pop(),
+                                              child: const Text('Close'),
+                                            ),
+                                          ],
                                         ),
-                                        const SizedBox(height: 12),
-                                        Text(
-                                          "ID: $userId",
-                                          style: const TextStyle(fontSize: 14, color: Colors.black54),
-                                        ),
-                                      ],
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.of(context).pop(),
-                                        child: const Text('Close'),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
+                                  );
+                                },
                       ),
                       GestureDetector(
                         onTap: () {
-                          Navigator.pushReplacementNamed(context, '/profilePage');
+                          Navigator.pushReplacementNamed(
+                            context,
+                            '/profilePage',
+                          );
                         },
                         child: CircleAvatar(
                           radius: 22,
-                          backgroundColor: const Color.fromARGB(255, 220, 239, 255),
+                          backgroundColor: const Color.fromARGB(
+                            255,
+                            220,
+                            239,
+                            255,
+                          ),
                           child: Icon(
                             Icons.person_4_rounded,
                             color: Color.fromARGB(255, 47, 47, 49),
@@ -116,11 +159,21 @@ class _HomePageState extends State<HomePage> {
               Row(
                 children: [
                   Expanded(
-                    child: _buildStatCard('Active Prescriptions', '3', Icons.medication, Color.fromARGB(255, 26,90,100)),
+                    child: _buildStatCard(
+                      'Active Prescriptions',
+                      '3',
+                      Icons.medication,
+                      Color.fromARGB(255, 26, 90, 100),
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: _buildStatCard('Today\'s Reminders', '2', Icons.notifications_active, Color.fromARGB(255, 64, 53, 123)),
+                    child: _buildStatCard(
+                      'Today\'s Reminders',
+                      '2',
+                      Icons.notifications_active,
+                      Color.fromARGB(255, 64, 53, 123),
+                    ),
                   ),
                 ],
               ),
@@ -145,12 +198,42 @@ class _HomePageState extends State<HomePage> {
                 childAspectRatio: 1.2,
                 children: [
                   // rgba(26,90,100,255)
-                  _buildActionCard('Medicine Search', Icons.search, Color.fromARGB(255, 64, 55, 124), '/medicineSearch'),
-                  _buildActionCard('Add Prescription', Icons.add_circle, Color.fromARGB(255, 109, 205, 163), '/createPrescription'),
-                  _buildActionCard('View Prescriptions', Icons.description, Color.fromARGB(255, 51,184,196), '/viewPrescriptions'),
-                  _buildActionCard('My Reports', Icons.analytics, Color.fromARGB(255, 159, 140, 140), '/report'),
-                  _buildActionCard('Scan QR', Icons.qr_code_scanner, Color.fromARGB(255, 47, 47, 49), '/scanQrPage'),
-                  _buildActionCard('Sharing History', Icons.share_outlined,Color.fromARGB(255, 55, 93, 175), '/emptyPage'),
+                  _buildActionCard(
+                    'Medicine Search',
+                    Icons.search,
+                    Color.fromARGB(255, 64, 55, 124),
+                    '/medicineSearch',
+                  ),
+                  _buildActionCard(
+                    'Add Prescription',
+                    Icons.add_circle,
+                    Color.fromARGB(255, 109, 205, 163),
+                    '/createPrescription',
+                  ),
+                  _buildActionCard(
+                    'View Prescriptions',
+                    Icons.description,
+                    Color.fromARGB(255, 51, 184, 196),
+                    '/viewPrescriptions',
+                  ),
+                  _buildActionCard(
+                    'My Reports',
+                    Icons.analytics,
+                    Color.fromARGB(255, 159, 140, 140),
+                    '/report',
+                  ),
+                  _buildActionCard(
+                    'Scan QR',
+                    Icons.qr_code_scanner,
+                    Color.fromARGB(255, 47, 47, 49),
+                    '/scanQrPage',
+                  ),
+                  _buildActionCard(
+                    'Sharing History',
+                    Icons.share_outlined,
+                    Color.fromARGB(255, 55, 93, 175),
+                    '/emptyPage',
+                  ),
                 ],
               ),
               const SizedBox(height: 20),
@@ -205,7 +288,10 @@ class _HomePageState extends State<HomePage> {
                           Navigator.pushReplacementNamed(context, '/emptyPage');
                         },
                         icon: const Icon(Icons.visibility, size: 20),
-                        label: const Text('View all reminders', style: TextStyle(fontSize: 16)),
+                        label: const Text(
+                          'View all reminders',
+                          style: TextStyle(fontSize: 16),
+                        ),
                         style: TextButton.styleFrom(
                           foregroundColor: Color.fromARGB(255, 47, 47, 49),
                           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -222,8 +308,12 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -251,19 +341,18 @@ class _HomePageState extends State<HomePage> {
               color: Colors.white,
             ),
           ),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.white,
-            ),
-          ),
+          Text(title, style: TextStyle(fontSize: 13, color: Colors.white)),
         ],
       ),
     );
   }
 
-  Widget _buildActionCard(String title, IconData icon, Color color, String route) {
+  Widget _buildActionCard(
+    String title,
+    IconData icon,
+    Color color,
+    String route,
+  ) {
     return GestureDetector(
       onTap: () {
         Navigator.pushReplacementNamed(context, route);
@@ -291,11 +380,7 @@ class _HomePageState extends State<HomePage> {
                 color: color.withOpacity(1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                icon,
-                color: Colors.white,
-                size: 32,
-              ),
+              child: Icon(icon, color: Colors.white, size: 32),
             ),
             const SizedBox(height: 12),
             Text(
@@ -312,7 +397,6 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
 
   Widget _buildReminderItem(String medicine, String time, bool taken) {
     return Container(
@@ -343,13 +427,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          Text(
-            time,
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 14,
-            ),
-          ),
+          Text(time, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
         ],
       ),
     );
