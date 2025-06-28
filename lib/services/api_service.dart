@@ -328,4 +328,30 @@ class ApiService {
       return false;
     }
   }
+
+  // Fetch another user's profile (read-only)
+  Future<Map<String, dynamic>?> getUserProfileForUser(String userId) async {
+    try {
+        final response = await http.get(
+          Uri.parse('${AppConstants.baseUrl}/profile/public/$userId'),
+          headers: {'Content-Type': 'application/json'},
+        );
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> rawData = jsonDecode(response.body);
+        final Map<String, dynamic> processedData = {};
+        rawData.forEach((key, value) {
+          if (value != null) {
+            processedData[key] = value.toString();
+          } else {
+            processedData[key] = value;
+          }
+        });
+        print('Fetched profile for user $userId: $processedData');
+        return processedData;
+      }
+    } catch (e) {
+      print('Error fetching profile for user $userId: $e');
+    }
+    return null;
+  }
 }

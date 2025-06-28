@@ -6,7 +6,9 @@ import '../utils/constants.dart';
 import '../utils/helpers.dart';
 
 class Profile extends StatefulWidget {
-  const Profile({super.key});
+  final String? userId; // Add this parameter
+
+  const Profile({super.key, this.userId}); // Accept userId in constructor
 
   @override
   State<Profile> createState() => _ProfileState();
@@ -18,6 +20,7 @@ class _ProfileState extends State<Profile> {
 
   bool _isLoading = false;
   bool _isEditing = false;
+  bool _isOtherUser = false;
 
   final Map<String, String> _defaultValues = {
     'name': 'No Name',
@@ -46,11 +49,16 @@ class _ProfileState extends State<Profile> {
 
   void _initializeUserData() {
     final user = _authService.currentUser;
-    if (user != null && user.displayName != null) {
+    if (user != null && user.displayName != null && widget.userId == null) {
       _controllers['name']!.text = user.displayName!;
     }
     if (!AppConstants.bloodTypes.contains(_controllers['blood_type']!.text)) {
       _controllers['blood_type']!.text = 'Not specified';
+    }
+    // If viewing another user's profile, disable editing
+    if (widget.userId != null) {
+      _isOtherUser = true;
+      _isEditing = false;
     }
   }
 
@@ -63,10 +71,16 @@ class _ProfileState extends State<Profile> {
 
   Future<void> _loadCachedProfile() async {
     try {
-      final cachedData = await _apiService.loadCachedProfileOnly();
+      Map<String, dynamic>? cachedData;
+      if (widget.userId != null) {
+        // No cache for other users
+        cachedData = null;
+      } else {
+        cachedData = await _apiService.loadCachedProfileOnly();
+      }
       if (cachedData != null && mounted) {
         setState(() {
-          _updateControllers(cachedData);
+          _updateControllers(cachedData!);
         });
       }
     } catch (e) {
@@ -77,10 +91,17 @@ class _ProfileState extends State<Profile> {
   Future<void> _fetchUserProfileInBackground() async {
     if (mounted) setState(() => _isLoading = true);
     try {
-      final userData = await _apiService.getUserProfile();
+      Map<String, dynamic>? userData;
+      if (widget.userId != null) {
+        // Fetch another user's profile
+        userData = await _apiService.getUserProfileForUser(widget.userId!);
+      } else {
+        // Fetch current user's profile
+        userData = await _apiService.getUserProfile();
+      }
       if (userData != null && mounted) {
         setState(() {
-          _updateControllers(userData);
+          _updateControllers(userData!);
         });
       }
     } catch (e) {
@@ -91,18 +112,18 @@ class _ProfileState extends State<Profile> {
   }
 
   void _updateControllers(Map<String, dynamic> userData) {
-  _controllers.forEach((key, controller) {
-    if (key == 'gender') {
-      final genderValue = userData[key];
-      if (genderValue != null && genderValue == 'Other') {
-        controller.text = 'Prefer not to say';
+    _controllers.forEach((key, controller) {
+      if (key == 'gender') {
+        final genderValue = userData[key];
+        if (genderValue != null && genderValue == 'Other') {
+          controller.text = 'Prefer not to say';
+        } else {
+          controller.text = genderValue ?? controller.text;
+        }
       } else {
-        controller.text = genderValue ?? controller.text;
+        controller.text = userData[key] ?? controller.text;
       }
-    } else {
-      controller.text = userData[key] ?? controller.text;
-    }
-  });
+    });
   }
 
   @override
@@ -121,12 +142,17 @@ class _ProfileState extends State<Profile> {
   }
 
   void _toggleEditMode() {
-    setState(() {
-      _isEditing = !_isEditing;
-    });
+    if (!_isOtherUser) {
+      setState(() {
+        _isEditing = !_isEditing;
+      });
+    }
   }
 
   Future<void> _saveChanges() async {
+    // Only allow saving for current user, not other users
+    if (_isOtherUser) return;
+
     try {
       setState(() => _isLoading = true);
       final user = _authService.currentUser;
@@ -178,15 +204,19 @@ class _ProfileState extends State<Profile> {
   }
 
   void _cancelEdit() async {
-    setState(() => _isLoading = true);
-    await _loadCachedProfile();
-    setState(() {
-      _isEditing = false;
-      _isLoading = false;
-    });
+    if (!_isOtherUser) {
+      setState(() => _isLoading = true);
+      await _loadCachedProfile();
+      setState(() {
+        _isEditing = false;
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _selectDate(BuildContext context) async {
+    if (_isOtherUser) return; // Don't allow date selection for other users
+
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -225,7 +255,7 @@ class _ProfileState extends State<Profile> {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: _isEditing && isDropdown
+      child: _isEditing && isDropdown && !_isOtherUser
           ? DropdownButtonFormField<String>(
               value: options!.contains(controller.text) ? controller.text : null,
               items: options.map((opt) => DropdownMenuItem(value: opt, child: Text(opt))).toList(),
@@ -234,7 +264,7 @@ class _ProfileState extends State<Profile> {
               },
               decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
             )
-          : _isEditing
+          : _isEditing && !_isOtherUser
               ? TextField(
                   controller: controller,
                   decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
@@ -257,14 +287,15 @@ class _ProfileState extends State<Profile> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Patient Profile'),
+        title: Text(_isOtherUser ? 'Patient Profile' : 'My Profile'),
         actions: [
-          if (!_isEditing && !_isLoading)
+          if (!_isEditing && !_isLoading && !_isOtherUser)
             IconButton(
               icon: const Icon(Icons.refresh),
               onPressed: _fetchUserProfileInBackground,
               tooltip: 'Refresh',
             ),
+            
           if (!_isEditing && _isLoading)
             Container(
               padding: const EdgeInsets.all(10),
@@ -274,7 +305,13 @@ class _ProfileState extends State<Profile> {
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
             ),
-          if (_isEditing && !_isLoading) ...[
+            if (_isOtherUser && !_isLoading)
+            IconButton(
+              icon: const Icon(Icons.assessment),
+              onPressed: () {}, // arguments for report here
+              tooltip: 'View Reports',
+            ),
+          if (_isEditing && !_isLoading && !_isOtherUser) ...[
             IconButton(
               icon: const Icon(Icons.close),
               onPressed: _cancelEdit,
@@ -285,7 +322,7 @@ class _ProfileState extends State<Profile> {
               onPressed: _saveChanges,
               tooltip: 'Save',
             ),
-          ] else if (!_isEditing) ...[
+          ] else if (!_isEditing && !_isOtherUser) ...[
             IconButton(
               icon: const Icon(Icons.edit),
               onPressed: _toggleEditMode,
@@ -312,41 +349,60 @@ class _ProfileState extends State<Profile> {
                 // User info section
                 Container(
                   padding: const EdgeInsets.all(20),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 30,
-                        backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
-                        child: photoUrl == null ? const Icon(Icons.person, size: 30) : null,
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
+                  child: _isOtherUser
+                    ? // For other users - center content without photo
+                    Center(
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _isEditing
-                                ? TextField(
-                                    controller: _controllers['name'] ?? TextEditingController(),
-                                    decoration: const InputDecoration(labelText: 'Name'),
-                                  )
-                                : Text(
-                                    _controllers['name']?.text ?? '',
-                                    style: Theme.of(context).textTheme.titleLarge,
-                                  ),
-                            Text(
-                              user?.email ?? 'No Email',
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
+                            _isEditing && !_isOtherUser
+                              ? TextField(
+                                  controller: _controllers['name'] ?? TextEditingController(),
+                                  decoration: const InputDecoration(labelText: 'Name'),
+                                )
+                              : Text(
+                                  _controllers['name']?.text ?? '',
+                                  style: Theme.of(context).textTheme.titleLarge,
+                                ),
                           ],
                         ),
+                      )
+                    : // For current user - show photo and email
+                    Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 30,
+                            backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
+                            child: photoUrl == null ? const Icon(Icons.person, size: 30) : null,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _isEditing && !_isOtherUser
+                                    ? TextField(
+                                        controller: _controllers['name'] ?? TextEditingController(),
+                                        decoration: const InputDecoration(labelText: 'Name'),
+                                      )
+                                    : Text(
+                                        _controllers['name']?.text ?? '',
+                                        style: Theme.of(context).textTheme.titleLarge,
+                                      ),
+                                Text(
+                                  user?.email ?? 'No Email',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
+              ),
+              if (_isOtherUser)
                 const Divider(),
-                // Personal Information section
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              // Personal Information section
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

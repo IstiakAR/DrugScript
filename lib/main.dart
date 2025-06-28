@@ -36,17 +36,46 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       initialRoute: '/',
-      routes: {
-        '/': (context) => const SplashScreen(),  // Change this to SplashScreen
-        '/wrapper': (context) => const Wrapper(),  // Add this route
-        '/homePage': (context) => const HomePage(),
-        '/medicineSearch': (context) => const MedicineSearchApp(),
-        '/profilePage': (context) => const Profile(),
-        '/createPrescription': (context) => const AddPrescription(),
-        '/report': (context) => const Report(),
-        '/viewPrescriptions': (context) => const ViewPrescription(),
-        '/scanQrPage': (context) => const ScanQrPage(),
-        '/prescriptionDetails': (context) => PrescriptionDetails(prescriptionId: ModalRoute.of(context)?.settings.arguments as String,),
+      onGenerateRoute: (settings) {
+        if (settings.name == '/profilePage') {
+          final args = settings.arguments as Map<String, dynamic>?;
+          return MaterialPageRoute(
+            builder: (_) => Profile(userId: args?['userId']),
+          );
+        }
+        if (settings.name == '/prescriptionDetails') {
+          final prescriptionId = settings.arguments as String;
+          return MaterialPageRoute(
+            builder: (_) => PrescriptionDetails(prescriptionId: prescriptionId),
+          );
+        }
+        
+        // Handle other routes
+        switch (settings.name) {
+          case '/':
+            return MaterialPageRoute(builder: (_) => const SplashScreen());
+          case '/wrapper':
+            return MaterialPageRoute(builder: (_) => const Wrapper());
+          case '/homePage':
+            return MaterialPageRoute(builder: (_) => const HomePage());
+          case '/medicineSearch':
+            return MaterialPageRoute(builder: (_) => const MedicineSearchApp());
+          case '/createPrescription':
+            return MaterialPageRoute(builder: (_) => const AddPrescription());
+          case '/report':
+            return MaterialPageRoute(builder: (_) => const Report());
+          case '/viewPrescriptions':
+            return MaterialPageRoute(builder: (_) => const ViewPrescription());
+          case '/scanQrPage':
+            return MaterialPageRoute(builder: (_) => const ScanQrPage());
+          default:
+            return MaterialPageRoute(
+              builder: (_) => Scaffold(
+                appBar: AppBar(title: const Text('Page Not Found')),
+                body: const Center(child: Text('404 - Page Not Found')),
+              ),
+            );
+        }
       },
     );
   }

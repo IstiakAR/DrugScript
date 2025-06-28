@@ -74,6 +74,12 @@ class _ScanQrPageState extends State<ScanQrPage>
   }
 
   void _showSuccessfulScan(String code) {
+    if (code.startsWith('USERID-')) {
+      final scannedUserId = code.substring('USERID-'.length);
+      Navigator.pushReplacementNamed(context, '/profilePage', arguments: {'userId': scannedUserId});
+      return;
+    }
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -111,9 +117,6 @@ class _ScanQrPageState extends State<ScanQrPage>
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Scanned at: $_currentDateTime (UTC)'),
-                Text('User: Clear20-22'),
-                const Divider(),
                 SelectableText(code),
               ],
             ),
