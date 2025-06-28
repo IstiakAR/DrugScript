@@ -87,3 +87,4 @@ web/build/
 # Firebase / local config files (optional - if using)
 firebase_options.dart
 
+devtools_options.yaml
