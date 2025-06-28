@@ -14,9 +14,9 @@ class Report extends StatefulWidget {
 }
 
 class _ReportState extends State<Report> with SingleTickerProviderStateMixin {
-  bool _showPreviousReports = false; 
+  bool _showPreviousReports = false;
   File? _reportImage;
-  List<File> _multiImages = [];
+  final List<File> _multiImages = [];
   final TextEditingController _noteController = TextEditingController();
   late TabController _tabController;
   String _currentDateTime = '';
@@ -46,17 +46,40 @@ class _ReportState extends State<Report> with SingleTickerProviderStateMixin {
     });
   }
 
+  void _showZoomableImage(BuildContext context, File image) {
+    showDialog(
+      context: context,
+      builder:
+          (_) => Dialog(
+            insetPadding: const EdgeInsets.all(16),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: InteractiveViewer(
+                minScale: 1,
+                maxScale: 5,
+                child: Image.file(image, fit: BoxFit.contain),
+              ),
+            ),
+          ),
+    );
+  }
+
   Future<void> _pickImage(ImageSource source) async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(
       source: source,
-      maxWidth: 1200,
-      maxHeight: 1200,
+      maxWidth: 1000,
+      maxHeight: 1000,
       imageQuality: 85,
     );
     if (pickedFile != null) {
+      final picked = File(pickedFile.path);
       setState(() {
-        _reportImage = File(pickedFile.path);
+        _reportImage = picked;
+        // Add to multiImages if not already present
+        if (!_multiImages.any((img) => img.path == picked.path)) {
+          _multiImages.add(picked);
+        }
       });
     }
   }
@@ -70,7 +93,13 @@ class _ReportState extends State<Report> with SingleTickerProviderStateMixin {
     );
     if (pickedFiles.isNotEmpty) {
       setState(() {
-        _multiImages = pickedFiles.map((x) => File(x.path)).toList();
+        // Add only new images to avoid duplicates
+        for (var x in pickedFiles) {
+          final file = File(x.path);
+          if (!_multiImages.any((img) => img.path == file.path)) {
+            _multiImages.add(file);
+          }
+        }
       });
     }
   }
@@ -137,244 +166,264 @@ class _ReportState extends State<Report> with SingleTickerProviderStateMixin {
   }
 
   Widget _buildReportContent() {
-if (_showPreviousReports) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Row(
+    if (_showPreviousReports) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back, color: Color(0xFF4A637D)),
-            onPressed: () {
-              setState(() => _showPreviousReports = false);
-            },
-          ),
-          const SizedBox(width: 8),
-          const Text(
-            'Previous Reports',
-            style: TextStyle(
-              color: Color(0xFF4A637D),
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-      const Divider(height: 24),
-      ListView.separated(
-        shrinkWrap: true,
-        physics: NeverScrollableScrollPhysics(),
-        itemCount: _previousVisits.length,
-        separatorBuilder: (_, __) => const Divider(),
-        itemBuilder: (context, index) {
-          final visit = _previousVisits[index];
-          return ListTile(
-            leading: CircleAvatar(
-              backgroundColor: const Color(0xFFD0E8FF),
-              child: Text(
-                '${index + 1}',
-                style: const TextStyle(
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back, color: Color(0xFF4A637D)),
+                onPressed: () {
+                  setState(() => _showPreviousReports = false);
+                },
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'Previous Reports',
+                style: TextStyle(
                   color: Color(0xFF4A637D),
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-            ),
-            title: Text('Date: ${visit['date']}'),
-            subtitle: Text('${visit['doctor']} - ${visit['reason']}'),
-            trailing: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: visit['status'] == 'Completed'
-                    ? Colors.green.withOpacity(0.2)
-                    : Colors.orange.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                visit['status'],
-                style: TextStyle(
-                  color: visit['status'] == 'Completed'
-                      ? Colors.green
-                      : Colors.orange,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    ],
-  );
-}
-
-  // The main report entry UI
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      // Main Image Section
-      GestureDetector(
-        onTap: () => _pickImage(ImageSource.gallery),
-        child: Container(
-          height: 200,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.grey[300]!),
+            ],
           ),
-          child: _reportImage != null
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
-                  child: Image.file(
-                    _reportImage!,
-                    width: double.infinity,
-                    height: 200,
-                    fit: BoxFit.cover,
-                  ),
-                )
-              : Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.add_photo_alternate,
-                        size: 40,
-                        color: Colors.blue[200],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        "Tap to add main report image",
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                    ],
+          const Divider(height: 24),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            itemCount: _previousVisits.length,
+            separatorBuilder: (_, __) => const Divider(),
+            itemBuilder: (context, index) {
+              final visit = _previousVisits[index];
+              return ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: const Color(0xFFD0E8FF),
+                  child: Text(
+                    '${index + 1}',
+                    style: const TextStyle(
+                      color: Color(0xFF4A637D),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-        ),
-      ),
-      const SizedBox(height: 14),
+                title: Text('Date: ${visit['date']}'),
+                subtitle: Text('${visit['doctor']} - ${visit['reason']}'),
+                trailing: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color:
+                        visit['status'] == 'Completed'
+                            ? Colors.green.withOpacity(0.2)
+                            : Colors.orange.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    visit['status'],
+                    style: TextStyle(
+                      color:
+                          visit['status'] == 'Completed'
+                              ? Colors.green
+                              : Colors.orange,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      );
+    }
 
-      // Additional Images Section
-      if (_multiImages.isNotEmpty)
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Additional Images',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[800],
-                fontSize: 16,
-              ),
+    // The main report entry UI
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Main Image Section
+        GestureDetector(
+          onTap: () {
+            if (_reportImage != null) {
+              _showZoomableImage(context, _reportImage!);
+            } else {
+              _pickImage(ImageSource.gallery);
+            }
+          },
+          child: Container(
+            height: 200,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.grey[300]!),
             ),
-            const SizedBox(height: 8),
-            SizedBox(
-              height: 72,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: _multiImages.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (context, idx) {
-                  return Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.file(
-                          _multiImages[idx],
-                          width: 72,
-                          height: 72,
-                          fit: BoxFit.cover,
-                        ),
+            child:
+                _reportImage != null
+                    ? ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: Image.file(
+                        _reportImage!,
+                        width: double.infinity,
+                        height: 200,
+                        fit: BoxFit.cover,
                       ),
-                      Positioned(
-                        top: 0,
-                        right: 0,
-                        child: GestureDetector(
+                    )
+                    : Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.add_photo_alternate,
+                            size: 40,
+                            color: Colors.blue[200],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            "Tap to add main report image",
+                            style: TextStyle(color: Colors.grey[600]),
+                          ),
+                        ],
+                      ),
+                    ),
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        // Additional Images Section
+        if (_multiImages.isNotEmpty)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Additional Images',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[800],
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 72,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _multiImages.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (context, idx) {
+                    return Stack(
+                      children: [
+                        GestureDetector(
                           onTap: () {
-                            setState(() => _multiImages.removeAt(idx));
+                            setState(() {
+                              _reportImage = _multiImages[idx];
+                            });
                           },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.5),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.close,
-                              size: 16,
-                              color: Colors.white,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.file(
+                              _multiImages[idx],
+                              width: 72,
+                              height: 72,
+                              fit: BoxFit.cover,
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  );
-                },
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() => _multiImages.removeAt(idx));
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.5),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.close,
+                                size: 16,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
               ),
-            ),
-            const SizedBox(height: 14),
-          ],
-        ),
+              const SizedBox(height: 14),
+            ],
+          ),
 
-      // Scalable Action Bar for Image Actions
-      SizedBox(
-        height: 56,
-        child: ListView(
-          scrollDirection: Axis.horizontal,
-          children: [
-            _imageActionButton(
-              icon: Icons.photo_library_outlined,
-              label: "Gallery",
-              onPressed: () => _pickImage(ImageSource.gallery),
-            ),
-            _imageActionButton(
-              icon: Icons.camera_alt_outlined,
-              label: "Camera",
-              onPressed: () => _pickImage(ImageSource.camera),
-            ),
-            _imageActionButton(
-              icon: Icons.collections,
-              label: "Multiple",
-              onPressed: _pickMultiImages,
-            ),
-            // _imageActionButton(
-            //   icon: Icons.history,
-            //   label: "Previous Reports",
-            //   onPressed: () {
-            //     setState(() {
-            //       _showPreviousReports = true;
-            //     });
-            //   },
-            // ),
-          ],
-        ),
-      ),
-      const SizedBox(height: 16),
-
-      // Notes Section
-      Text(
-        "Notes & Observations",
-        style: TextStyle(
-          color: Colors.blueGrey[900],
-          fontWeight: FontWeight.w600,
-          fontSize: 16,
-        ),
-      ),
-
-      const SizedBox(height: 16),
-      TextField(
-        controller: _noteController,
-        maxLines: 3,
-        decoration: InputDecoration(
-          hintText: "Add any notes or observations here...",
-          filled: true,
-          fillColor: Colors.grey[50],
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide.none,
+        // Scalable Action Bar for Image Actions
+        SizedBox(
+          height: 56,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            children: [
+              _imageActionButton(
+                icon: Icons.photo_library_outlined,
+                label: "Gallery",
+                onPressed: () => _pickImage(ImageSource.gallery),
+              ),
+              _imageActionButton(
+                icon: Icons.camera_alt_outlined,
+                label: "Camera",
+                onPressed: () => _pickImage(ImageSource.camera),
+              ),
+              _imageActionButton(
+                icon: Icons.collections,
+                label: "Multiple",
+                onPressed: _pickMultiImages,
+              ),
+              // _imageActionButton(
+              //   icon: Icons.history,
+              //   label: "Previous Reports",
+              //   onPressed: () {
+              //     setState(() {
+              //       _showPreviousReports = true;
+              //     });
+              //   },
+              // ),
+            ],
           ),
         ),
-      ),
-    ],
-  );
-}  // Helper for fancy action bar buttons
+        const SizedBox(height: 16),
+
+        // Notes Section
+        Text(
+          "Notes & Observations",
+          style: TextStyle(
+            color: Colors.blueGrey[900],
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+          ),
+        ),
+
+        const SizedBox(height: 16),
+        TextField(
+          controller: _noteController,
+          maxLines: 3,
+          decoration: InputDecoration(
+            hintText: "Add any notes or observations here...",
+            filled: true,
+            fillColor: Colors.grey[50],
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
+      ],
+    );
+  } // Helper for fancy action bar buttons
+
   Widget _imageActionButton({
     required IconData icon,
     required String label,
@@ -532,7 +581,7 @@ if (_showPreviousReports) {
     );
   }
 
-  Widget _buildVisitHistory() {
+  Widget _buildVisitHistory(BuildContext context) {
     return Card(
       elevation: 4,
       child: Padding(
@@ -592,6 +641,25 @@ if (_showPreviousReports) {
                       ),
                     ),
                   ),
+                  // Add onTap to show report dialog
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder:
+                          (_) => AlertDialog(
+                            title: Text('Doctor\'s Report'),
+                            content: Text(
+                              visit['report'] ?? 'No report provided.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('Close'),
+                              ),
+                            ],
+                          ),
+                    );
+                  },
                 );
               },
             ),
@@ -698,7 +766,7 @@ if (_showPreviousReports) {
           ),
           SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
-            child: _buildVisitHistory(),
+            child: _buildVisitHistory(context),
           ),
         ],
       ),
@@ -800,5 +868,3 @@ if (_showPreviousReports) {
     super.dispose();
   }
 }
-
-
