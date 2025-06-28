@@ -683,47 +683,22 @@ class _ReportState extends State<Report> with SingleTickerProviderStateMixin {
                 () => Navigator.pushReplacementNamed(context, '/homePage'),
             tooltip: "Back",
           ),
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
+          title: Row(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.receipt_long,
-                    color: Color(0xFF4A637D),
-                    size: 26,
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Medical Report',
-                    style: TextStyle(
-                      color: Color(0xFF4A637D),
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ],
+              const Icon(
+                Icons.receipt_long,
+                color: Color(0xFF4A637D),
+                size: 26,
               ),
-              const SizedBox(height: 4),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.access_time, size: 14, color: Colors.grey),
-                  const SizedBox(width: 4),
-                  Text(
-                    _currentDateTime,
-                    style: const TextStyle(
-                      color: Colors.grey,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ],
+              const SizedBox(width: 8),
+              const Text(
+                'Medical Report',
+                style: TextStyle(
+                  color: Color(0xFF4A637D),
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
               ),
             ],
           ),
