@@ -20,41 +20,6 @@ class _AddPrescriptionState extends State<AddPrescription> {
   final TextEditingController _doctorNameController = TextEditingController();
   final TextEditingController _contactController = TextEditingController();
 
-  // Helper method to build timing buttons
-  Widget _buildTimingButton({
-    required BuildContext context,
-    required IconData icon,
-    required bool isSelected,
-    required VoidCallback onPressed,
-    required String tooltip,
-  }) {
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(4),
-        child: Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color:
-                isSelected
-                    ? const Color.fromARGB(255, 47, 47, 49)
-                    : const Color.fromARGB(255, 214, 214, 214),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Icon(
-            icon,
-            size: 26,
-            color:
-                isSelected
-                    ? Colors.white
-                    : const Color.fromARGB(255, 45, 45, 45),
-          ),
-        ),
-      ),
-    );
-  }
-
   // State variables
   List<Map<String, dynamic>> selectedMedicines = [];
   File? prescriptionImage;
@@ -216,6 +181,7 @@ class _AddPrescriptionState extends State<AddPrescription> {
     );
   }
 
+
   // Navigate to medicine search and handle selection
   Future<void> _navigateToMedicineSearch() async {
     final result = await Navigator.push(
@@ -231,7 +197,7 @@ class _AddPrescriptionState extends State<AddPrescription> {
     print(
       "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
     );
-    print("getttttting $result"); // Debugging line to check the result
+    print("getttttting $result"); 
 
     if (result != null && result is Map<String, dynamic>) {
       setState(() {
@@ -242,6 +208,7 @@ class _AddPrescriptionState extends State<AddPrescription> {
 
         if (!alreadyExists) {
           selectedMedicines.add(result);
+          FocusScope.of(context).unfocus();
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -269,6 +236,7 @@ class _AddPrescriptionState extends State<AddPrescription> {
     }
     return await user.getIdToken(true);
   }
+
 
   Future<void> _createPrescription() async {
     if (_doctorNameController.text.isEmpty) {
@@ -311,21 +279,31 @@ class _AddPrescriptionState extends State<AddPrescription> {
         base64Image = base64Encode(imageBytes);
       }
 
-      final List<String> medicineSlugs = [];
+      final List<Map<String, dynamic>> medicineSlugsWithFreqDays = [];
+      
       for (var medicine in selectedMedicines) {
-        if (medicine['slug'] != null && medicine['slug'] is String) {
-          medicineSlugs.add(medicine['slug']);
+        if (medicine['slug'] != null && medicine['slug'] is String ) {
+          medicineSlugsWithFreqDays.add(
+            {
+              'slug': medicine['slug'],
+              'frequency': {
+                'morning': medicine['morning'] ?? false,
+                'lunch': medicine['lunch'] ?? false,
+                'dinner': medicine['dinner'] ?? false,
+              },
+              'days': medicine['days'] ?? 1, 
+            },
+          );
         }
       }
 
-      print('Selected Medicines Slugs: $medicineSlugs');
+      print('Selected Medicines Slugs: $medicineSlugsWithFreqDays');
 
       // Create payload matching your FastAPI Prescription model
       final Map<String, dynamic> payload = {
         'doctor_name': _doctorNameController.text,
         'contact': _contactController.text,
-        'medicines':
-            medicineSlugs, // Make sure this is a list of maps/dictionaries
+        'medicines': medicineSlugsWithFreqDays, // Make sure this is a list of maps/dictionaries
         'image': base64Image,
         'date':
             _selectedDate != null
@@ -402,8 +380,44 @@ class _AddPrescriptionState extends State<AddPrescription> {
     super.dispose();
   }
 
+
   Timer? _decrementTimer;
   Timer? _incrementTimer;
+
+
+  Widget _buildTimingButton({
+    required BuildContext context,
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onPressed,
+    required String tooltip,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(4),
+        child: Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color:
+                isSelected
+                    ? const Color.fromARGB(255, 47, 47, 49)
+                    : const Color.fromARGB(255, 214, 214, 214),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Icon(
+            icon,
+            size: 26,
+            color:
+                isSelected
+                    ? Colors.white
+                    : const Color.fromARGB(255, 45, 45, 45),
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -767,7 +781,12 @@ class _AddPrescriptionState extends State<AddPrescription> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.only(
+                        left: 12,
+                        right: 12,
+                        top: 0,
+                        bottom: 12,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -939,7 +958,7 @@ class _AddPrescriptionState extends State<AddPrescription> {
                                       onTap: () {
                                         setState(() {
                                           int days = medicine['days'] ?? 1;
-                                          if (days > 1) {
+                                          if (days >= 1) {
                                             medicine['days'] = days + 1;
                                           }
                                         });
@@ -957,7 +976,7 @@ class _AddPrescriptionState extends State<AddPrescription> {
                                           (timer) {
                                             setState(() {
                                               int days = medicine['days'] ?? 1;
-                                              if (days >= 1) {
+                                              if (days > 1) {
                                                 medicine['days'] = days + 1;
                                               } else {
                                                 _incrementTimer?.cancel();
