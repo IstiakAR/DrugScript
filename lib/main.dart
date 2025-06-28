@@ -9,6 +9,7 @@ import 'package:drugscript/screens/prescription_details.dart';
 import 'package:drugscript/theme/app_theme.dart';
 import 'package:drugscript/screens/splash_screen.dart';
 import 'package:drugscript/screens/scan_qr_page.dart';
+import 'package:drugscript/screens/sharing_history.dart';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -68,6 +69,8 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(builder: (_) => const ViewPrescription());
           case '/scanQrPage':
             return MaterialPageRoute(builder: (_) => const ScanQrPage());
+          case '/sharingHistory':
+            return MaterialPageRoute(builder: (_) => const SharingHistory());
           default:
             return MaterialPageRoute(
               builder: (_) => Scaffold(

@@ -232,7 +232,7 @@ class _HomePageState extends State<HomePage> {
                     'Sharing History',
                     Icons.share_outlined,
                     Color.fromARGB(255, 55, 93, 175),
-                    '/emptyPage',
+                    '/sharingHistory',
                   ),
                 ],
               ),
