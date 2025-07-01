@@ -21,6 +21,7 @@ class _ChatPageState extends State<ChatPage> {
   bool isLoading = true;
   String? currentUserId;
   static const String _cacheKey = 'cached_messages';
+  static const String _userCacheKey = 'cached_user_names';
 
   Map<String, Map<String, dynamic>> userCache = {};
 
@@ -41,12 +42,21 @@ class _ChatPageState extends State<ChatPage> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final cachedData = prefs.getString(_cacheKey);
+      final cachedUserData = prefs.getString(_userCacheKey);
       if (cachedData != null) {
         final cachedMessages = jsonDecode(cachedData) as List;
         setState(() {
           messages = cachedMessages;
           isLoading = false;
         });
+        if (cachedUserData != null) {
+          userCache = Map<String, Map<String, dynamic>>.from(
+            (jsonDecode(cachedUserData) as Map).map(
+              (k, v) => MapEntry(k, Map<String, dynamic>.from(v)),
+            ),
+          );
+        }
+        await _preloadUserNames(cachedMessages); // <-- preload names
         _scrollToBottom();
       }
     } catch (e) {
@@ -58,6 +68,7 @@ class _ChatPageState extends State<ChatPage> {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_cacheKey, jsonEncode(messages));
+      await prefs.setString(_userCacheKey, jsonEncode(userCache));
     } catch (e) {
       print('Error caching messages: $e');
     }
@@ -70,6 +81,7 @@ class _ChatPageState extends State<ChatPage> {
         messages = fetchedMessages;
         isLoading = false;
       });
+      await _preloadUserNames(fetchedMessages); // <-- preload names
       await _cacheMessages();
       _scrollToBottom();
     } catch (e) {
@@ -173,6 +185,19 @@ class _ChatPageState extends State<ChatPage> {
       };
       userCache[userId] = fallbackInfo;
       return fallbackInfo;
+    }
+  }
+
+  Future<void> _preloadUserNames(List<dynamic> messages) async {
+    final uniqueUserIds = messages
+        .map((msg) => msg['sender_id'])
+        .where((id) => id != null)
+        .toSet();
+
+    for (final userId in uniqueUserIds) {
+      if (!userCache.containsKey(userId)) {
+        await _getUserInfo(userId);
+      }
     }
   }
 
