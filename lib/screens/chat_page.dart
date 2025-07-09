@@ -280,81 +280,99 @@ class _ChatPageState extends State<ChatPage> {
         final userInfo = snapshot.data ?? {'name': 'Loading...'};
         final userName = userInfo['name'] as String;
 
-        return Align(
-          alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-          child: Container(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.75,
-            ),
-            decoration: BoxDecoration(
-              color: isMe 
-                  ? (isTemp ? const Color.fromARGB(200, 100, 149, 237) : const Color.fromARGB(255, 100, 149, 237))
-                  : Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
-                  spreadRadius: 1,
-                  blurRadius: 3,
-                  offset: const Offset(0, 1),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (!isMe)
-                  Text(
-                    userName,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
-                    ),
+        return GestureDetector(
+          onDoubleTap: () {
+            // Only allow mentioning others, not yourself
+            if (!isMe && userName != 'Loading...') {
+              final mention = '@$userName ';
+              final currentText = _messageController.text;
+              // Avoid duplicate mentions
+              if (!currentText.contains(mention)) {
+                setState(() {
+                  _messageController.text = '$currentText$mention';
+                  _messageController.selection = TextSelection.fromPosition(
+                    TextPosition(offset: _messageController.text.length),
+                  );
+                });
+              }
+            }
+          },
+          child: Align(
+            alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.75,
+              ),
+              decoration: BoxDecoration(
+                color: isMe 
+                    ? (isTemp ? const Color.fromARGB(200, 100, 149, 237) : const Color.fromARGB(255, 100, 149, 237))
+                    : Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.1),
+                    spreadRadius: 1,
+                    blurRadius: 3,
+                    offset: const Offset(0, 1),
                   ),
-                if (!isMe) const SizedBox(height: 2),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        content,
-                        style: TextStyle(
-                          color: isMe ? Colors.white : Colors.black87,
-                          fontSize: 16,
-                        ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (!isMe)
+                    Text(
+                      userName,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                    if (isMe && isTemp) ...[
-                      const SizedBox(width: 8),
-                      SizedBox(
-                        width: 12,
-                        height: 12,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white.withOpacity(0.7),
+                  if (!isMe) const SizedBox(height: 2),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          content,
+                          style: TextStyle(
+                            color: isMe ? Colors.white : Colors.black87,
+                            fontSize: 16,
                           ),
                         ),
                       ),
+                      if (isMe && isTemp) ...[
+                        const SizedBox(width: 8),
+                        SizedBox(
+                          width: 12,
+                          height: 12,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white.withOpacity(0.7),
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
-                ),
-                if (timestamp.isNotEmpty && !isTemp)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      _formatTimestamp(timestamp),
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: isMe ? Colors.white70 : Colors.grey[500],
+                  ),
+                  if (timestamp.isNotEmpty && !isTemp)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        _formatTimestamp(timestamp),
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: isMe ? Colors.white70 : Colors.grey[500],
+                        ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         );
