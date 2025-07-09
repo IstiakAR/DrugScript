@@ -217,7 +217,7 @@ class _PrescriptionDetailsState extends State<PrescriptionDetails> {
 
         leading: IconButton(
           icon: const Icon(
-            Icons.arrow_back,
+            Icons.arrow_back_ios_new_rounded,
             color: Color.fromARGB(255, 0, 0, 0),
           ),
           onPressed: () => Navigator.pop(context),

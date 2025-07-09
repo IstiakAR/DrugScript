@@ -73,7 +73,10 @@ class _MedicineSearchAppState extends State<MedicineSearchApp> {
       appBar: widget.selectionMode ? AppBar(
         title: const Text("Select Medicine"),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Color.fromARGB(255, 0, 0, 0),
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ) : null,
@@ -94,7 +97,7 @@ class _MedicineSearchAppState extends State<MedicineSearchApp> {
                         size: 25,
                     ),
                     onPressed: () {
-                      Navigator.pushReplacementNamed(context, '/homePage');
+                      Navigator.pop(context);
                     },
                     style: IconButton.styleFrom(
                       padding: const EdgeInsets.all(8),

@@ -433,8 +433,8 @@ class _AddPrescriptionState extends State<AddPrescription> {
         ),
 
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pushReplacementNamed(context, '/homePage'),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          onPressed: () => Navigator.pop(context),
         ),
 
         actions: [

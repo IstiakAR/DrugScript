@@ -173,7 +173,7 @@ class _ReportState extends State<Report> with SingleTickerProviderStateMixin {
           Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back, color: Color(0xFF4A637D)),
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF4A637D)),
                 onPressed: () {
                   setState(() => _showPreviousReports = false);
                 },
@@ -678,9 +678,9 @@ class _ReportState extends State<Report> with SingleTickerProviderStateMixin {
           backgroundColor: Colors.white,
           elevation: 2,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Color(0xFF4A637D)),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF4A637D)),
             onPressed:
-                () => Navigator.pushReplacementNamed(context, '/homePage'),
+                () => Navigator.pop(context),
             tooltip: "Back",
           ),
           title: Row(

@@ -28,288 +28,310 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header Section
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 4),
-                      const Text(
-                        'DrugScript',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Color.fromARGB(255, 47, 47, 49),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.qr_code,
-                          size: 28,
-                          color: Color.fromARGB(255, 47, 47, 49),
-                        ),
-                        tooltip: "Show My QR Code",
-                        onPressed:
-                            userId == null
-                                ? null
-                                : () {
-                                  showDialog(
-                                    context: context,
-                                    builder:
-                                        (context) => AlertDialog(
-                                          title: const Text('My QR Code'),
-                                          content: SingleChildScrollView(
-                                            child: Center(
-                                              child: SizedBox(
-                                                width:
-                                                    MediaQuery.of(
-                                                      context,
-                                                    ).size.width *
-                                                    0.8, // 80% of screen width
-                                                child: Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  children: [
-                                                    QrImageView(
-                                                      data: 'USERID-$userId',
-                                                      version: QrVersions.auto,
-                                                      size:
-                                                          MediaQuery.of(
-                                                            context,
-                                                          ).size.width *
-                                                          0.6,
-                                                      backgroundColor:
-                                                          Colors.white,
-                                                    ),
-                                                    const SizedBox(height: 12),
-                                                    Text(
-                                                      "ID: $userId",
-                                                      style: const TextStyle(
-                                                        fontSize: 14,
-                                                        color: Colors.black54,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed:
-                                                  () =>
-                                                      Navigator.of(
-                                                        context,
-                                                      ).pop(),
-                                              child: const Text('Close'),
-                                            ),
-                                          ],
-                                        ),
-                                  );
-                                },
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pushReplacementNamed(
-                            context,
-                            '/profilePage',
-                          );
-                        },
-                        child: CircleAvatar(
-                          radius: 22,
-                          backgroundColor: const Color.fromARGB(
-                            255,
-                            220,
-                            239,
-                            255,
-                          ),
-                          child: Icon(
-                            Icons.person_4_rounded,
-                            color: Color.fromARGB(255, 47, 47, 49),
-                            size: 30,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+    return WillPopScope(
+      onWillPop: () async {
+        final shouldExit = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Exit App'),
+            content: const Text('Are you sure you want to exit the app?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
               ),
-
-              const SizedBox(height: 30),
-
-              // Quick Stats Cards
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildStatCard(
-                      'Active Prescriptions',
-                      '3',
-                      Icons.medication,
-                      Color.fromARGB(255, 26, 90, 100),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildStatCard(
-                      'Today\'s Reminders',
-                      '2',
-                      Icons.notifications_active,
-                      Color.fromARGB(255, 64, 53, 123),
-                    ),
-                  ),
-                ],
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Exit'),
               ),
-              const SizedBox(height: 20),
-
-              // Main Actions Grid
-              const Text(
-                'Quick Actions',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 16),
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
-                childAspectRatio: 1.2,
-                children: [
-                  // rgba(26,90,100,255)
-                  _buildActionCard(
-                    'Medicine Search',
-                    Icons.search,
-                    Color.fromARGB(255, 64, 55, 124),
-                    '/medicineSearch',
-                  ),
-                  _buildActionCard(
-                    'Add Prescription',
-                    Icons.add_circle,
-                    Color.fromARGB(255, 109, 205, 163),
-                    '/createPrescription',
-                  ),
-                  _buildActionCard(
-                    'View Prescriptions',
-                    Icons.description,
-                    Color.fromARGB(255, 51, 184, 196),
-                    '/viewPrescriptions',
-                  ),
-                  _buildActionCard(
-                    'My Reports',
-                    Icons.analytics,
-                    Color.fromARGB(255, 159, 140, 140),
-                    '/report',
-                  ),
-                  _buildActionCard(
-                    'Scan QR',
-                    Icons.qr_code_scanner,
-                    Color.fromARGB(255, 47, 47, 49),
-                    '/scanQrPage',
-                  ),
-                  _buildActionCard(
-                    'Sharing History',
-                    Icons.share_outlined,
-                    Color.fromARGB(255, 55, 93, 175),
-                    '/sharingHistory',
-                  ),
-                  _buildActionCard(
-                    'Community Chat',
-                    Icons.forum,
-                    Color.fromARGB(255, 100, 149, 237),
-                    '/chatPage',
-                  ),                  
-                  _buildActionCard(
-                    'Reviews',
-                    Icons.forum,
-                    Color.fromARGB(255, 217, 219, 90),
-                    '/reviews',
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Medicine Reminders Section
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      spreadRadius: 0,
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            ],
+          ),
+        );
+        return shouldExit ?? false;
+      },
+      child: Scaffold(
+        backgroundColor: Colors.grey[50],
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header Section
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        const SizedBox(height: 4),
                         const Text(
-                          'Today\'s Reminders',
+                          'DrugScript',
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: 28,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                            color: Color.fromARGB(255, 47, 47, 49),
                           ),
-                        ),
-                        Icon(
-                          Icons.medication,
-                          color: Colors.blue[600],
-                          size: 24,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    _buildReminderItem('Paracetamol', '8:00 AM', true),
-                    _buildReminderItem('Vitamin C', '1:30 PM', false),
-                    _buildReminderItem('Aspirin', '8:00 PM', false),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: TextButton.icon(
-                        onPressed: () {
-                          Navigator.pushReplacementNamed(context, '/emptyPage');
-                        },
-                        icon: const Icon(Icons.visibility, size: 20),
-                        label: const Text(
-                          'View all reminders',
-                          style: TextStyle(fontSize: 16),
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.qr_code,
+                            size: 28,
+                            color: Color.fromARGB(255, 47, 47, 49),
+                          ),
+                          tooltip: "Show My QR Code",
+                          onPressed:
+                              userId == null
+                                  ? null
+                                  : () {
+                                    showDialog(
+                                      context: context,
+                                      builder:
+                                          (context) => AlertDialog(
+                                            title: const Text('My QR Code'),
+                                            content: SingleChildScrollView(
+                                              child: Center(
+                                                child: SizedBox(
+                                                  width:
+                                                      MediaQuery.of(
+                                                        context,
+                                                      ).size.width *
+                                                      0.8, // 80% of screen width
+                                                  child: Column(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: [
+                                                      QrImageView(
+                                                        data: 'USERID-$userId',
+                                                        version: QrVersions.auto,
+                                                        size:
+                                                            MediaQuery.of(
+                                                              context,
+                                                            ).size.width *
+                                                            0.6,
+                                                        backgroundColor:
+                                                            Colors.white,
+                                                      ),
+                                                      const SizedBox(height: 12),
+                                                      Text(
+                                                        "ID: $userId",
+                                                        style: const TextStyle(
+                                                          fontSize: 14,
+                                                          color: Colors.black54,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed:
+                                                    () =>
+                                                        Navigator.of(
+                                                          context,
+                                                        ).pop(),
+                                                child: const Text('Close'),
+                                              ),
+                                            ],
+                                          ),
+                                    );
+                                  },
                         ),
-                        style: TextButton.styleFrom(
-                          foregroundColor: Color.fromARGB(255, 47, 47, 49),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(
+                              context,
+                              '/profilePage',
+                            );
+                          },
+                          child: CircleAvatar(
+                            radius: 22,
+                            backgroundColor: const Color.fromARGB(
+                              255,
+                              220,
+                              239,
+                              255,
+                            ),
+                            child: Icon(
+                              Icons.person_4_rounded,
+                              color: Color.fromARGB(255, 47, 47, 49),
+                              size: 30,
+                            ),
+                          ),
                         ),
+                      ],
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 30),
+
+                // Quick Stats Cards
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildStatCard(
+                        'Active Prescriptions',
+                        '3',
+                        Icons.medication,
+                        Color.fromARGB(255, 26, 90, 100),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildStatCard(
+                        'Today\'s Reminders',
+                        '2',
+                        Icons.notifications_active,
+                        Color.fromARGB(255, 64, 53, 123),
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 20),
+
+                // Main Actions Grid
+                const Text(
+                  'Quick Actions',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 1.2,
+                  children: [
+                    // rgba(26,90,100,255)
+                    _buildActionCard(
+                      'Medicine Search',
+                      Icons.search,
+                      Color.fromARGB(255, 64, 55, 124),
+                      '/medicineSearch',
+                    ),
+                    _buildActionCard(
+                      'Add Prescription',
+                      Icons.add_circle,
+                      Color.fromARGB(255, 109, 205, 163),
+                      '/createPrescription',
+                    ),
+                    _buildActionCard(
+                      'View Prescriptions',
+                      Icons.description,
+                      Color.fromARGB(255, 51, 184, 196),
+                      '/viewPrescriptions',
+                    ),
+                    _buildActionCard(
+                      'My Reports',
+                      Icons.analytics,
+                      Color.fromARGB(255, 159, 140, 140),
+                      '/report',
+                    ),
+                    _buildActionCard(
+                      'Scan QR',
+                      Icons.qr_code_scanner,
+                      Color.fromARGB(255, 47, 47, 49),
+                      '/scanQrPage',
+                    ),
+                    _buildActionCard(
+                      'Sharing History',
+                      Icons.share_outlined,
+                      Color.fromARGB(255, 55, 93, 175),
+                      '/sharingHistory',
+                    ),
+                    _buildActionCard(
+                      'Community Chat',
+                      Icons.forum,
+                      Color.fromARGB(255, 100, 149, 237),
+                      '/chatPage',
+                    ),                  
+                    _buildActionCard(
+                      'Reviews',
+                      Icons.forum,
+                      Color.fromARGB(255, 217, 219, 90),
+                      '/reviews',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // Medicine Reminders Section
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.1),
+                        spreadRadius: 0,
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Today\'s Reminders',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          Icon(
+                            Icons.medication,
+                            color: Colors.blue[600],
+                            size: 24,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      _buildReminderItem('Paracetamol', '8:00 AM', true),
+                      _buildReminderItem('Vitamin C', '1:30 PM', false),
+                      _buildReminderItem('Aspirin', '8:00 PM', false),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: TextButton.icon(
+                          onPressed: () {
+                            Navigator.pushReplacementNamed(context, '/emptyPage');
+                          },
+                          icon: const Icon(Icons.visibility, size: 20),
+                          label: const Text(
+                            'View all reminders',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Color.fromARGB(255, 47, 47, 49),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -363,7 +385,7 @@ class _HomePageState extends State<HomePage> {
   ) {
     return GestureDetector(
       onTap: () {
-        Navigator.pushReplacementNamed(context, route);
+        Navigator.pushNamed(context, route);
       },
       child: Container(
         padding: const EdgeInsets.all(16),

@@ -39,9 +39,9 @@ class _SharingHistoryState extends State<SharingHistory>
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black87),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () {
-            Navigator.pushReplacementNamed(context, '/homePage');
+            Navigator.pop(context);
           },
         ),
         bottom: TabBar(
