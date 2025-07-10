@@ -1,8 +1,13 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:drugscript/models/clinic_model.dart';
+import 'package:drugscript/models/review_model.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:http/http.dart' as http;
 
 void main() {
   runApp(const MyApp());
@@ -46,9 +51,6 @@ class ReviewHomePage extends StatelessWidget {
   }
 }
 
-
-
-
 class DoctorSelectionPage extends StatefulWidget {
   const DoctorSelectionPage({super.key});
 
@@ -87,7 +89,12 @@ class _DoctorSelectionPageState extends State<DoctorSelectionPage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ReviewPage(id: doctorId, isDoctor: true),
+                    builder:
+                        (context) => ReviewPage(
+                          subjectId: doctorId,
+                          isDoctor: true,
+                          displayName: 'Doctor $doctorId',
+                        ),
                   ),
                 );
               } else {
@@ -96,7 +103,7 @@ class _DoctorSelectionPageState extends State<DoctorSelectionPage> {
                 );
               }
             },
-            child: const Text('Go to Doctor Review'),
+            child: const Text('Review A Doctor'),
           ),
         ],
       ),
@@ -115,181 +122,277 @@ class ClinicSelectionPage extends StatefulWidget {
 }
 
 class _ClinicSelectionPageState extends State<ClinicSelectionPage> {
-  String? _selectedClinic;
-  List<String> _allClinics = [];
-  bool _loading = true;
+  final _controller = TextEditingController();
+  final _baseUrl = 'https://fastapi-app-production-6e30.up.railway.app';
+  final List<Clinic> _results = [];
+  bool _loading = false;
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
-    _loadClinics();
+    _controller.addListener(_onSearchChanged);
   }
 
-  Future<void> _loadClinics() async {
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    final query = _controller.text.trim();
+    // cancel any pending search
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      if (query.length < 2) {
+        setState(() => _results.clear());
+      } else {
+        _performSearch(query);
+      }
+    });
+  }
+
+  Future<void> _performSearch(String query) async {
+    setState(() {
+      _loading = true;
+      _results.clear();
+    });
+
     try {
-      // Load clinics
-      final String clinicsString = await rootBundle.loadString('assets/clinics.json');
-      final List<dynamic> clinicsJson = json.decode(clinicsString);
-      final List<String> privateClinics = clinicsJson
-          .where((e) => e is Map && e['Name'] != null)
-          .map<String>((e) => e['District'] != null ? '${e['Name']}, ${e['District']}' : e['Name'] as String)
-          .toList();
+      final user = FirebaseAuth.instance.currentUser;
+      final idToken = user != null ? await user.getIdToken() : null;
+      final uri = Uri.parse(
+        '$_baseUrl/clinics/_search',
+      ).replace(queryParameters: {'q': query, 'limit': '20'});
 
-      // Load hospitals
-      final String hospitalsString = await rootBundle.loadString('assets/hospitals.json');
-      final List<dynamic> hospitalsJson = json.decode(hospitalsString);
-      final List<String> hospitals = hospitalsJson.cast<String>();
+      final resp = await http.get(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          if (idToken != null) 'Authorization': 'Bearer $idToken',
+        },
+      );
 
-      // Combine both lists
-      setState(() {
-        _allClinics = [...privateClinics, ...hospitals];
-        _loading = false;
-      });
+      if (resp.statusCode != 200) {
+        debugPrint('Search error ${resp.statusCode}: ${resp.body}');
+        // you could show a SnackBar here if you like
+      } else {
+        final List data = jsonDecode(resp.body);
+        setState(() {
+          _results.addAll(data.map((e) => Clinic.fromJson(e)));
+        });
+      }
     } catch (e) {
-      setState(() {
-        _allClinics = [];
-        _loading = false;
-      });
+      debugPrint('Search exception: $e');
+    } finally {
+      setState(() => _loading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    
-    // Create a TextEditingController for the search field
-    final TextEditingController searchController = TextEditingController();
-    // Filtered list of clinics
-    List<String> filteredClinics = _allClinics;
-    
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        // Direct search field
-        TextField(
-          controller: searchController,
-          decoration: const InputDecoration(
-            labelText: "Search Hospital/Clinic",
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.search),
-            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          ),
-          onChanged: (value) {
-            setState(() {
-              // Normalize search for chittagong/chattogram
-              String normalize(String s) => s.toLowerCase().replaceAll('chittagong', 'chattogram');
-              final normalizedQuery = normalize(value);
-              
-              filteredClinics = _allClinics
-                .where((clinic) => normalize(clinic).contains(normalizedQuery))
-                .toList();
-            });
-          },
+    return Scaffold(
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            // ————— the search bar —————
+            TextField(
+              controller: _controller,
+              decoration: InputDecoration(
+                hintText: 'Search Hospital/Clinic',
+                prefixIcon: const Icon(Icons.search),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // ————— results area —————
+            Expanded(
+              child:
+                  _loading
+                      ? const Center(child: CircularProgressIndicator())
+                      : _results.isEmpty && _controller.text.trim().length >= 2
+                      ? const Center(child: Text('No results found'))
+                      : ListView.separated(
+                        itemCount: _results.length,
+                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        itemBuilder: (ctx, i) {
+                          final clinic = _results[i];
+                          return ListTile(
+                            title: Text(clinic.displayName),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (_) => ReviewPage(
+                                        subjectId: clinic.id,
+                                        isDoctor: false,
+                                        displayName: clinic.displayName,
+                                      ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+            ),
+          ],
         ),
-        
-        const SizedBox(height: 8),
-        
-        // Display filtered results in a scrollable list
-        Expanded(
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: filteredClinics.length,
-            itemBuilder: (context, index) {
-              return ListTile(
-                title: Text(filteredClinics[index]),
-                onTap: () {
-                  setState(() {
-                    _selectedClinic = filteredClinics[index];
-                    searchController.text = filteredClinics[index];
-                  });
-                  // Directly navigate to review page when a clinic is selected
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ReviewPage(id: filteredClinics[index], isDoctor: false),
-                    ),
-                  );
-                },
-                selected: _selectedClinic == filteredClinics[index],
-              );
-            },
-          ),
-        ),
-      ],
       ),
     );
   }
 }
 
-class ReviewPage extends StatefulWidget {
-  final String id;
-  final bool isDoctor;
 
-  const ReviewPage({super.key, required this.id, required this.isDoctor});
+
+
+class ReviewPage extends StatefulWidget {
+  final String subjectId; // the clinic or doctor ID
+  final bool isDoctor;
+  final String displayName; // the human-readable name
+
+  const ReviewPage({
+    super.key,
+    required this.subjectId,
+    required this.isDoctor,
+    required this.displayName,
+  });
 
   @override
   State<ReviewPage> createState() => _ReviewPageState();
 }
 
 class _ReviewPageState extends State<ReviewPage> {
-  final _formKey = GlobalKey<FormState>();
-  final _reviewController = TextEditingController();
-  double _rating = 3.0;
 
-  // In-memory reviews list (replace with backend in production)
-  static final List<Map<String, dynamic>> _reviews = [];
+  final _formKey = GlobalKey<FormState>();
+  final _reviewCtrl = TextEditingController();
+  double _rating = 3.0;
+  List<Review> _reviews = [];
+  bool _loading = true;
+  final String baseUrl = 'https://fastapi-app-production-6e30.up.railway.app';
 
   @override
-  void dispose() {
-    _reviewController.dispose();
-    super.dispose();
+  void initState() {
+    print('ReviewPage initState for ========= ${widget.subjectId} + ${widget.isDoctor} + ${widget.displayName}');
+    super.initState();
+    _fetchReviews();
   }
 
-  void _submitReview() {
-    if (_formKey.currentState!.validate()) {
+  Future<void> _fetchReviews() async {
+    setState(() => _loading = true);
+    final user = FirebaseAuth.instance.currentUser;
+    final token = await user?.getIdToken();
+    final uri = Uri.parse('$baseUrl/reviews').replace(
+      queryParameters: {
+        "subject_id": widget.subjectId,
+        "is_doctor": widget.isDoctor.toString(),
+      },
+    );
+    final resp = await http.get(
+      uri,
+      headers: {if (token != null) 'Authorization': 'Bearer $token'},
+    );
+    if (resp.statusCode == 200) {
+      final List data = json.decode(resp.body);
       setState(() {
-        _reviews.add({
-          'id': widget.id,
-          'isDoctor': widget.isDoctor,
-          'review': _reviewController.text,
-          'rating': _rating,
-          'userName': 'User${_reviews.length + 1}',
-          'date': DateTime.now().toIso8601String(),
-        });
+        _reviews = data.map((e) => Review.fromJson(e)).toList();
+        _loading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Review submitted!')),
-      );
-      _reviewController.clear();
-      // Optionally reset rating:
-      setState(() => _rating = 3.0);
+    } else {
+      setState(() => _loading = false);
     }
   }
 
+  Future<void> _submitReview() async {
+    if (!_formKey.currentState!.validate()) return;
+    final user = FirebaseAuth.instance.currentUser;
+    final token = await user?.getIdToken();
+
+    final body = json.encode({
+      "subject_id": widget.subjectId,
+      "is_doctor": widget.isDoctor,
+      "rating": _rating.toInt(),
+      "review": _reviewCtrl.text,
+    });
+
+    final resp = await http.post(
+      Uri.parse('$baseUrl/reviews'),
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+      body: body,
+    );
+
+    if (resp.statusCode == 201) {
+      _reviewCtrl.clear();
+      setState(() => _rating = 3.0);
+      _fetchReviews();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Review submitted!')));
+    } else {
+      print('Submit error ###################################: ${resp.statusCode} - ${resp.body}');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Submit failed')));
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
-    final filteredReviews = _reviews.where((r) => r['id'] == widget.id && r['isDoctor'] == widget.isDoctor).toList();
+    if (_loading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    final reviews = _reviews;
+    final total = reviews.length;
+    final avg =
+        total > 0
+            ? reviews.map((r) => r.rating).reduce((a, b) => a + b) / total
+            : 0.0;
+    final counts = List<int>.filled(5, 0);
+    for (var r in reviews) {
+      final idx = (r.rating.clamp(1, 5) - 1).toInt();
+      counts[idx]++;
+    }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.isDoctor ? 'Review Doctor ${widget.id}' : 'Review Clinic ${widget.id}'),
-      ),
+      appBar: AppBar(title: Text(widget.displayName)),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // -- Review Form --
             Form(
               key: _formKey,
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   TextFormField(
-                    controller: _reviewController,
-                    decoration: const InputDecoration(labelText: 'Your Review'),
-                    validator: (value) => (value == null || value.isEmpty) ? 'Enter a review' : null,
+                    controller: _reviewCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Your Review',
+                      border: OutlineInputBorder(),
+                      alignLabelWithHint: true,
+                    ),
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? 'Enter a review' : null,
+                    minLines: 5,    // sets the initial height
+                    maxLines: 8,    // allows it to grow up to 8 lines
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -302,111 +405,121 @@ class _ReviewPageState extends State<ReviewPage> {
                         direction: Axis.horizontal,
                         allowHalfRating: false,
                         itemCount: 5,
-                        itemPadding: const EdgeInsets.symmetric(horizontal: 2.0),
-                        itemBuilder: (context, index) => const Icon(Icons.star, color: Colors.deepPurple),
-                        onRatingUpdate: (rating) => setState(() => _rating = rating),
+                        itemPadding: const EdgeInsets.symmetric(horizontal: 2),
+                        itemBuilder:
+                            (ctx, _) => const Icon(
+                              Icons.star,
+                              color: Colors.deepPurple,
+                            ),
+                        onRatingUpdate: (r) => setState(() => _rating = r),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  ElevatedButton(onPressed: _submitReview, child: const Text('Submit Review')),
+                  ElevatedButton(
+                    onPressed: _submitReview,
+                    child: const Text('Submit Review'),
+                  ),
                 ],
               ),
             ),
+
             const SizedBox(height: 24),
-            const Text('Reviews:', style: TextStyle(fontWeight: FontWeight.bold)),
-            // --- Review Summary START ---
-            Builder(
-              builder: (context) {
-                if (filteredReviews.isEmpty) {
-                  return const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 24),
-                    child: Text('No reviews yet.', style: TextStyle(color: Colors.grey)),
-                  );
-                }
+            const Text(
+              'Reviews:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
 
-                // Calculate average and counts
-                final avg = filteredReviews.fold<double>(0.0, (sum, r) => sum + (r['rating'] as double)) / filteredReviews.length;
-                final counts = List<int>.filled(5, 0);
-                for (var r in filteredReviews) {
-                  final idx = ((r['rating'] as double).round()).clamp(1, 5).toInt() - 1; // clamp returns num
-                  counts[idx]++;
-                }
-                final total = filteredReviews.length;
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            // -- Summary or empty state --
+            if (total == 0) ...[
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Text(
+                  'No reviews yet.',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+            ] else ...[
+              // Summary Row
+              Row(
+                children: [
+                  // average
+                  Column(
                     children: [
-                      // Left: Average rating
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(avg.toStringAsFixed(1), style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 4),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: List.generate(5, (i) {
-                              if (avg >= i + 1) {
-                                return const Icon(Icons.star, color: Colors.blue, size: 20);
-                              } else if (avg > i && avg < i + 1) {
-                                return const Icon(Icons.star_half, color: Colors.blue, size: 20);
-                              } else {
-                                return const Icon(Icons.star_border, color: Colors.blue, size: 20);
-                              }
-                            }),
-                          ),
-                          const SizedBox(height: 4),
-                          Text('$total reviews', style: const TextStyle(color: Colors.grey)),
-                        ],
-                      ),
-                      const SizedBox(width: 24),
-                      // Right: Star rating breakdown
-                      Expanded(
-                        child: Column(
-                          children: List.generate(5, (index) {
-                            final star = 5 - index;
-                            final count = counts[star - 1];
-                            final percent = total > 0 ? count / total : 0.0;
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 2),
-                              child: Row(
-                                children: [
-                                  Text('$star', style: const TextStyle(fontSize: 14)),
-                                  const SizedBox(width: 4),
-                                  const Icon(Icons.star, size: 14, color: Colors.grey),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: LinearProgressIndicator(
-                                      value: percent,
-                                      backgroundColor: Colors.grey.shade300,
-                                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
-                                      minHeight: 10,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text('$count', style: const TextStyle(fontSize: 12)),
-                                ],
-                              ),
-                            );
-                          }),
+                      Text(
+                        avg.toStringAsFixed(1),
+                        style: const TextStyle(
+                          fontSize: 48,
+                          fontWeight: FontWeight.bold,
                         ),
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: List.generate(5, (i) {
+                          if (avg >= i + 1) {
+                            return const Icon(Icons.star, size: 20);
+                          }
+                          if (avg > i && avg < i + 1) {
+                            return const Icon(Icons.star_half, size: 20);
+                          }
+                          return const Icon(Icons.star_border, size: 20);
+                        }),
+                      ),
+                      Text(
+                        '$total reviews',
+                        style: const TextStyle(color: Colors.grey),
                       ),
                     ],
                   ),
-                );
-              },
-            ),
-            // --- Review Summary END ---
+                  const SizedBox(width: 24),
+                  // breakdown
+                  Expanded(
+                    child: Column(
+                      children: List.generate(5, (i) {
+                        final star = 5 - i;
+                        final count = counts[star - 1];
+                        final pct = count / total;
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: Row(
+                            children: [
+                              Text('$star'),
+                              const SizedBox(width: 4),
+                              const Icon(
+                                Icons.star,
+                                size: 14,
+                                color: Colors.grey,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: LinearProgressIndicator(
+                                  value: pct,
+                                  backgroundColor: Colors.grey.shade300,
+                                  valueColor: AlwaysStoppedAnimation(
+                                    Colors.blue,
+                                  ),
+                                  minHeight: 10,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text('$count'),
+                            ],
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+
+            const SizedBox(height: 24),
+            // -- List of reviews --
             Expanded(
               child: ListView.builder(
-                itemCount: filteredReviews.length,
-                itemBuilder: (context, index) {
-                  final review = filteredReviews[index];
-                  final userName = review['userName'] ?? 'User';
-                  final reviewDate = review['date'] != null ? DateTime.tryParse(review['date']) ?? DateTime.now() : DateTime.now();
-
+                itemCount: total,
+                itemBuilder: (ctx, idx) {
+                  final r = reviews[idx];
                   return Card(
                     margin: const EdgeInsets.symmetric(vertical: 8),
                     child: Padding(
@@ -414,68 +527,95 @@ class _ReviewPageState extends State<ReviewPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Top row: User image, name, 3-dot menu
                           Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              CircleAvatar(
-                                backgroundColor: Colors.deepPurple[100],
-                                child: Text(userName[0], style: const TextStyle(color: Colors.deepPurple)),
-                              ),
+                              CircleAvatar(child: Text(r.userName[0])),
                               const SizedBox(width: 10),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(userName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    Text(
+                                      r.userName,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                     Row(
                                       children: [
-                                        // Violet stars
-                                        ...List.generate(5, (i) {
-                                          final isFilled = i < (review['rating'] as double).round();
-                                          return Icon(isFilled ? Icons.star : Icons.star_border, color: Colors.deepPurple, size: 18);
-                                        }),
+                                        ...List.generate(
+                                          5,
+                                          (i) => Icon(
+                                            i < r.rating
+                                                ? Icons.star
+                                                : Icons.star_border,
+                                            size: 18,
+                                          ),
+                                        ),
                                         const SizedBox(width: 8),
-                                        Text('${reviewDate.year}-${reviewDate.month.toString().padLeft(2, '0')}-${reviewDate.day.toString().padLeft(2, '0')}',
-                                            style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                        Text(
+                                          '${r.createdAt.toLocal().year}-${r.createdAt.toLocal().month.toString().padLeft(2, '0')}-${r.createdAt.toLocal().day.toString().padLeft(2, '0')}',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ],
                                 ),
                               ),
                               PopupMenuButton<String>(
-                                icon: const Icon(Icons.more_vert),
-                                onSelected: (value) {
-                                  final message = value == 'inappropriate' ? 'Flagged as inappropriate' : 'Flagged as spam';
-                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-                                },
-                                itemBuilder: (context) => const [
-                                  PopupMenuItem(value: 'inappropriate', child: Text('Flag as inappropriate')),
-                                  PopupMenuItem(value: 'spam', child: Text('Flag as spam')),
-                                ],
+                                onSelected:
+                                    (v) => ScaffoldMessenger.of(
+                                      context,
+                                    ).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          v == 'spam'
+                                              ? 'Flagged as spam'
+                                              : 'Flagged as inappropriate',
+                                        ),
+                                      ),
+                                    ),
+                                itemBuilder:
+                                    (_) => const [
+                                      PopupMenuItem(
+                                        value: 'inappropriate',
+                                        child: Text('Flag as inappropriate'),
+                                      ),
+                                      PopupMenuItem(
+                                        value: 'spam',
+                                        child: Text('Flag as spam'),
+                                      ),
+                                    ],
                               ),
                             ],
                           ),
                           const SizedBox(height: 8),
-                          // Review text
-                          Text(review['review'] as String),
+                          Text(r.review),
                           const SizedBox(height: 12),
-                          // Was this review helpful?
                           Row(
                             children: [
                               const Text('Was this review helpful?'),
                               const SizedBox(width: 8),
                               OutlinedButton(
-                                onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Thanks for your feedback!')),
-                                ),
+                                onPressed:
+                                    () => ScaffoldMessenger.of(
+                                      context,
+                                    ).showSnackBar(
+                                      const SnackBar(content: Text('Thanks!')),
+                                    ),
                                 child: const Text('Yes'),
                               ),
                               const SizedBox(width: 4),
                               OutlinedButton(
-                                onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Thanks for your feedback!')),
-                                ),
+                                onPressed:
+                                    () => ScaffoldMessenger.of(
+                                      context,
+                                    ).showSnackBar(
+                                      const SnackBar(content: Text('Thanks!')),
+                                    ),
                                 child: const Text('No'),
                               ),
                             ],
