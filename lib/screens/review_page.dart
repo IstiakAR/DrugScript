@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:dropdown_search/dropdown_search.dart';
@@ -60,12 +62,50 @@ class DoctorSelectionPage extends StatefulWidget {
 
 class _DoctorSelectionPageState extends State<DoctorSelectionPage> {
   final TextEditingController _doctorIdController = TextEditingController();
+  final String _baseUrl = 'https://fastapi-app-production-6e30.up.railway.app';
+  bool _loadingTop = true;
+  List<Map<String, dynamic>> _topDoctors = [];
+
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTopDoctors();
+  }
 
   @override
   void dispose() {
     _doctorIdController.dispose();
     super.dispose();
   }
+
+  Future<void> _fetchTopDoctors() async {
+    setState(() => _loadingTop = true);
+    try {
+      final uri = Uri.parse('$_baseUrl/doctors/top'); // adjust endpoint
+      final user = FirebaseAuth.instance.currentUser;
+      final token = user != null ? await user.getIdToken() : null;
+      final resp = await http.get(
+        uri.replace(queryParameters: {'limit': '5'}),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      );
+      if (resp.statusCode == 200) {
+        final List data = jsonDecode(resp.body);
+        setState(() => _topDoctors = List<Map<String, dynamic>>.from(data));
+      } else {
+        debugPrint('Failed to load top doctors: ${resp.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error fetching top doctors: $e');
+    } finally {
+      print('Top doctors fetched: ${_topDoctors}');
+      setState(() => _loadingTop = false);
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -105,6 +145,59 @@ class _DoctorSelectionPageState extends State<DoctorSelectionPage> {
             },
             child: const Text('Review A Doctor'),
           ),
+
+          const SizedBox(height: 24),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Top Rated Doctors',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+          ),
+          const SizedBox(height: 8),
+          _loadingTop
+              ? const Center(child: CircularProgressIndicator())
+              : _topDoctors.isEmpty
+              ? const Text('No data')
+              : Column(
+                children:
+                    _topDoctors.map((doc) {
+                      return ListTile(
+                        title: Text(doc['subject_id'] ?? 'Unnamed', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                        subtitle: Row(
+                          children: [
+                            // spread the generated list so you don’t end up with a nested List<Widget>
+                            ...List.generate(
+                              5,
+                              (i) => Icon(
+                                i < doc['average_rating']
+                                    ? Icons.star
+                                    : Icons.star_border,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              "( ${doc['average_rating'].toStringAsFixed(1)} )",
+                              style: const TextStyle(fontSize: 18),
+                            ),
+                          ],
+                        ),
+                        onTap:
+                            () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (_) => ReviewPage(
+                                      subjectId: doc['subject_id'],
+                                      isDoctor: true,
+                                      displayName: doc['subject_id'] ?? 'Unnamed',
+                                    ),
+                              ),
+                            ),
+                      );
+                    }).toList(),
+              ),
         ],
       ),
     );
@@ -278,6 +371,8 @@ class _ReviewPageState extends State<ReviewPage> {
   final _formKey = GlobalKey<FormState>();
   final _reviewCtrl = TextEditingController();
   double _rating = 3.0;
+  int sumRating = 0;
+  int reviewLength = 0;
   List<Review> _reviews = [];
   bool _loading = true;
   final String baseUrl = 'https://fastapi-app-production-6e30.up.railway.app';
@@ -324,6 +419,7 @@ class _ReviewPageState extends State<ReviewPage> {
       "is_doctor": widget.isDoctor,
       "rating": _rating.toInt(),
       "review": _reviewCtrl.text,
+      "average_rating": (sumRating + _rating) / (reviewLength + 1),
     });
 
     final resp = await http.post(
@@ -343,7 +439,6 @@ class _ReviewPageState extends State<ReviewPage> {
         context,
       ).showSnackBar(const SnackBar(content: Text('Review submitted!')));
     } else {
-      print('Submit error ###################################: ${resp.statusCode} - ${resp.body}');
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Submit failed')));
@@ -359,10 +454,14 @@ class _ReviewPageState extends State<ReviewPage> {
 
     final reviews = _reviews;
     final total = reviews.length;
+    final sumReview = total > 0 ? reviews.map((r) => r.rating).reduce((a, b) => a + b) : 0;
     final avg =
         total > 0
-            ? reviews.map((r) => r.rating).reduce((a, b) => a + b) / total
+            ? sumReview / total
             : 0.0;
+    sumRating = sumReview;
+    reviewLength = total;
+    
     final counts = List<int>.filled(5, 0);
     for (var r in reviews) {
       final idx = (r.rating.clamp(1, 5) - 1).toInt();
