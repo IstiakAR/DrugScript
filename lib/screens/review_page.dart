@@ -133,7 +133,7 @@ class _DoctorSelectionPageState extends State<DoctorSelectionPage> {
                         (context) => ReviewPage(
                           subjectId: doctorId,
                           isDoctor: true,
-                          displayName: 'Doctor $doctorId',
+                          displayName: doctorId,
                         ),
                   ),
                 );
@@ -217,6 +217,10 @@ class ClinicSelectionPage extends StatefulWidget {
 class _ClinicSelectionPageState extends State<ClinicSelectionPage> {
   final _controller = TextEditingController();
   final _baseUrl = 'https://fastapi-app-production-6e30.up.railway.app';
+
+  bool _loadingTop = true;
+  List<Map<String, dynamic>> _topClinics = [];
+
   final List<Clinic> _results = [];
   bool _loading = false;
   Timer? _debounce;
@@ -225,6 +229,7 @@ class _ClinicSelectionPageState extends State<ClinicSelectionPage> {
   void initState() {
     super.initState();
     _controller.addListener(_onSearchChanged);
+    _fetchTopClinics(); 
   }
 
   @override
@@ -284,14 +289,45 @@ class _ClinicSelectionPageState extends State<ClinicSelectionPage> {
     }
   }
 
+
+    // Fetch top 5 clinics just like doctors
+  Future<void> _fetchTopClinics() async {
+    setState(() => _loadingTop = true);
+    try {
+      final uri = Uri.parse('$_baseUrl/clinics/top');
+      final user = FirebaseAuth.instance.currentUser;
+      final token = user != null ? await user.getIdToken() : null;
+      final resp = await http.get(
+        uri.replace(queryParameters: {'limit': '5'}),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      );
+      if (resp.statusCode == 200) {
+        final List data = jsonDecode(resp.body);
+        setState(() => _topClinics = List<Map<String, dynamic>>.from(data));
+      } else {
+        print('Failed to load top clinics: ${resp.body}');
+        debugPrint('Failed to load top clinics: ${resp.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error fetching top clinics: $e');
+    } finally {
+      setState(() => _loadingTop = false);
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
+    final query = _controller.text.trim();
+
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // ————— the search bar —————
             TextField(
               controller: _controller,
               decoration: InputDecoration(
@@ -306,45 +342,82 @@ class _ClinicSelectionPageState extends State<ClinicSelectionPage> {
                 ),
               ),
             ),
-
             const SizedBox(height: 12),
-
-            // ————— results area —————
             Expanded(
-              child:
-                  _loading
-                      ? const Center(child: CircularProgressIndicator())
-                      : _results.isEmpty && _controller.text.trim().length >= 2
-                      ? const Center(child: Text('No results found'))
-                      : ListView.separated(
-                        itemCount: _results.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1),
-                        itemBuilder: (ctx, i) {
-                          final clinic = _results[i];
-                          return ListTile(
-                            title: Text(clinic.displayName),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (_) => ReviewPage(
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : (query.length < 2)
+                      ? (_loadingTop
+                          ? const Center(child: CircularProgressIndicator())
+                          : _topClinics.isEmpty
+                              ? const Center(child: Text('No top hospitals'))
+                              : ListView.separated(
+                                  itemCount: _topClinics.length,
+                                  separatorBuilder: (_, __) => const Divider(height: 1),
+                                  itemBuilder: (ctx, i) {
+                                    final clinic = _topClinics[i];
+                                    return ListTile(
+                                      title: Text(clinic['displayName'] ?? clinic['subject_id']),
+                                      subtitle: Row(
+                                        children: [
+                                          ...List.generate(
+                                            5,
+                                            (j) => Icon(
+                                              j < clinic['average_rating']
+                                                  ? Icons.star
+                                                  : Icons.star_border,
+                                              size: 20,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            "( ${clinic['average_rating'].toStringAsFixed(1)} )",
+                                            style: const TextStyle(fontSize: 18),
+                                          ),
+                                        ],
+                                      ),
+                                      onTap: () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => ReviewPage(
+                                            subjectId: clinic['subject_id'],
+                                            isDoctor: false,
+                                            displayName: clinic['displayName'] ?? clinic['subject_id'],
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ))
+                      : (_results.isEmpty
+                          ? const Center(child: Text('No results found'))
+                          : ListView.separated(
+                              itemCount: _results.length,
+                              separatorBuilder: (_, __) => const Divider(height: 1),
+                              itemBuilder: (ctx, i) {
+                                final clinic = _results[i];
+                                return ListTile(
+                                  title: Text(clinic.displayName),
+                                  onTap: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => ReviewPage(
                                         subjectId: clinic.id,
                                         isDoctor: false,
                                         displayName: clinic.displayName,
                                       ),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            )),
             ),
           ],
         ),
       ),
     );
   }
+
 }
 
 
@@ -416,6 +489,7 @@ class _ReviewPageState extends State<ReviewPage> {
 
     final body = json.encode({
       "subject_id": widget.subjectId,
+      "displayName" : widget.displayName,
       "is_doctor": widget.isDoctor,
       "rating": _rating.toInt(),
       "review": _reviewCtrl.text,
