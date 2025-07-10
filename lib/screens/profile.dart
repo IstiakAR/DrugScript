@@ -22,7 +22,7 @@ class _ProfileState extends State<Profile> {
   bool _isEditing = false;
   bool _isOtherUser = false;
 
-  final Map<String, String> _defaultValues = {
+  final Map<String, String> _placeholders  = {
     'name': 'No Name',
     'blood_type': 'Not specified',
     'allergies': 'None',
@@ -40,8 +40,8 @@ class _ProfileState extends State<Profile> {
   @override
   void initState() {
     super.initState();
-    _defaultValues.forEach((key, value) {
-      _controllers[key] = TextEditingController(text: value);
+    _placeholders .forEach((key, value) {
+      _controllers[key] = TextEditingController();
     });
     _initializeUserData();
     _loadProfileDataInBackground();
@@ -283,11 +283,16 @@ class _ProfileState extends State<Profile> {
                 if (value != null) setState(() => controller.text = value);
               },
               decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
+              hint: Text(_placeholders[key]!),
             )
           : _isEditing && !_isOtherUser
               ? TextField(
                   controller: controller,
-                  decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
+                  decoration: InputDecoration(
+                    labelText: label,
+                    prefixIcon: Icon(icon),
+                    hintText: _placeholders[key],
+                  ),
                   inputFormatters: inputFormatters,
                   keyboardType: keyboardType,
                 )
@@ -295,7 +300,11 @@ class _ProfileState extends State<Profile> {
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(icon),
                   title: Text(label),
-                  subtitle: Text(controller.text),
+                  subtitle: Text(
+                    controller.text.isEmpty
+                        ? _placeholders[key]!   
+                        : controller.text,
+                  ),
                 ),
     );
   }
@@ -450,6 +459,7 @@ class _ProfileState extends State<Profile> {
                                   controller: _controllers['date_of_birth'],
                                   decoration: const InputDecoration(
                                     labelText: 'Date of Birth',
+                                    hintText: 'Not specified',  
                                     prefixIcon: Icon(Icons.cake),
                                     suffixIcon: Icon(Icons.calendar_today, size: 18),
                                   ),

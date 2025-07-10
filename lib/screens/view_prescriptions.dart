@@ -126,6 +126,80 @@ class _ViewPrescriptionState extends State<ViewPrescription> {
     }
   }
 
+  Future<void> _deletePrescription(String prescriptionId) async {
+    // Show spinner in the app bar
+    if (mounted) setState(() => _isLoading = true);
+
+    try {
+      final token = await _getAuthToken();
+      final response = await http.delete(
+        Uri.parse(
+          'https://fastapi-app-production-6e30.up.railway.app/prescription/$prescriptionId',
+        ),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        // 1️⃣ Optimistically update UI
+        if (mounted) {
+          setState(() {
+            _prescriptions.removeWhere(
+              (p) => p['prescription_id'] == prescriptionId,
+            );
+          });
+        }
+
+        // 2️⃣ Persist the trimmed-down list in cache so it survives restarts
+        await _saveCache(jsonEncode({'prescriptions': _prescriptions}));
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Prescription deleted successfully')),
+        );
+      } else if (response.statusCode == 404) {
+        throw Exception('Prescription not found');
+      } else {
+        throw Exception(
+          'Delete failed. Status: ${response.statusCode}, Body: ${response.body}',
+        );
+      }
+    } catch (e) {
+      debugPrint('Error deleting prescription: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Unable to delete: $e')));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<bool?> _confirmDelete(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Confirm Delete'),
+            content: const Text('Are you sure you want to delete this prescription?',),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false), // user canceled
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(true), // user confirmed
+                child: const Text(
+                  'Delete',
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
+          ),
+    );
+  }
+
+
   // ──────────────────────────────────────────────────────────────────────────
   // UI
   // ──────────────────────────────────────────────────────────────────────────
@@ -167,12 +241,13 @@ class _ViewPrescriptionState extends State<ViewPrescription> {
                     itemCount: _prescriptions.length,
                     itemBuilder: (context, index) {
                       final prescription = _prescriptions[index];
+                      
                       return Card(
-                        elevation: 4,
+                        elevation: 1,
                         margin: const EdgeInsets.only(bottom: 16),
                         color: Colors.white,
                         shape: RoundedRectangleBorder(
-                          side: const BorderSide(color: Colors.black, width: 1),
+                          side: const BorderSide(color: Color.fromARGB(255, 255, 255, 255), width: 1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: InkWell(
@@ -186,19 +261,53 @@ class _ViewPrescriptionState extends State<ViewPrescription> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text('Dr. ${prescription['doctor_name']}',
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black)),
-                                    Text('Date: ${prescription['date']}',
-                                        style: const TextStyle(color: Colors.black54)),
-                                  ],
-                                ),
-                                const Divider(color: Colors.black26),
-                                Text('Diagnosis: ${prescription['diagnosis']}',
-                                    style: const TextStyle(color: Colors.black87)),
-                                const SizedBox(height: 8),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Dr. ${prescription['doctor_name']}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Date: ${prescription['date']}',
+                                        style: const TextStyle(
+                                          color: Colors.black54,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  const Divider(color: Colors.black26),
+
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Diagnosis: ${prescription['diagnosis']}',
+                                        style: const TextStyle(
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.delete_forever,
+                                          color: Color.fromARGB(255,255,77,77,
+                                          ),
+                                        ),
+                                        onPressed: () async {
+                                          final shouldDelete = await _confirmDelete(context);
+                                          if (shouldDelete == true) _deletePrescription(prescription['prescription_id']as String);
+                                        },
+                                      ),
+                                    ],
+                                  ),
+
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [

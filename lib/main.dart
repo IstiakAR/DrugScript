@@ -2,6 +2,7 @@ import 'package:drugscript/screens/homepage.dart';
 import 'package:drugscript/screens/add_prescription.dart';
 import 'package:drugscript/screens/medicine_search.dart';
 import 'package:drugscript/screens/profile.dart';
+import 'package:drugscript/screens/review_page.dart';
 import 'package:drugscript/screens/view_prescriptions.dart';
 import 'package:drugscript/screens/wrapper.dart';
 import 'package:drugscript/screens/report.dart';
@@ -75,9 +76,9 @@ class MyApp extends StatelessWidget {
           case '/chatPage':
             return MaterialPageRoute(builder: (_) => const ChatPage());
           case '/reviews':
-            // return MaterialPageRoute(builder: (_) => const ReviewsPage());
-            return null;
+            return MaterialPageRoute(builder: (_) => const ReviewHomePage());
         }
+        return null;
       },
     );
   }
