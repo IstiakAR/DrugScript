@@ -292,6 +292,7 @@ class _ProfileState extends State<Profile> {
                     labelText: label,
                     prefixIcon: Icon(icon),
                     hintText: _placeholders[key],
+                    hintStyle: TextStyle(color: const Color.fromARGB(255, 164, 164, 164)),
                   ),
                   inputFormatters: inputFormatters,
                   keyboardType: keyboardType,
