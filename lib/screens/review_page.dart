@@ -2,13 +2,11 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'package:dropdown_search/dropdown_search.dart';
 import 'package:drugscript/models/clinic_model.dart';
 import 'package:drugscript/models/review_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
 
 void main() {
@@ -101,7 +99,6 @@ class _DoctorSelectionPageState extends State<DoctorSelectionPage> {
     } catch (e) {
       debugPrint('Error fetching top doctors: $e');
     } finally {
-      print('Top doctors fetched: ${_topDoctors}');
       setState(() => _loadingTop = false);
     }
   }
@@ -308,7 +305,6 @@ class _ClinicSelectionPageState extends State<ClinicSelectionPage> {
         final List data = jsonDecode(resp.body);
         setState(() => _topClinics = List<Map<String, dynamic>>.from(data));
       } else {
-        print('Failed to load top clinics: ${resp.body}');
         debugPrint('Failed to load top clinics: ${resp.statusCode}');
       }
     } catch (e) {
@@ -452,7 +448,6 @@ class _ReviewPageState extends State<ReviewPage> {
 
   @override
   void initState() {
-    print('ReviewPage initState for ========= ${widget.subjectId} + ${widget.isDoctor} + ${widget.displayName}');
     super.initState();
     _fetchReviews();
   }

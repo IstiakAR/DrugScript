@@ -70,9 +70,7 @@ class _ViewPrescriptionState extends State<ViewPrescription> {
     return List<Map<String, dynamic>>.from(decoded['prescriptions']);
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // NETWORK & BUSINESS LOGIC
-  // ──────────────────────────────────────────────────────────────────────────
+
   Future<String?> _getAuthToken() async {
     final User? user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -143,7 +141,7 @@ class _ViewPrescriptionState extends State<ViewPrescription> {
       );
 
       if (response.statusCode == 200) {
-        // 1️⃣ Optimistically update UI
+
         if (mounted) {
           setState(() {
             _prescriptions.removeWhere(
@@ -152,7 +150,6 @@ class _ViewPrescriptionState extends State<ViewPrescription> {
           });
         }
 
-        // 2️⃣ Persist the trimmed-down list in cache so it survives restarts
         await _saveCache(jsonEncode({'prescriptions': _prescriptions}));
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -200,9 +197,6 @@ class _ViewPrescriptionState extends State<ViewPrescription> {
   }
 
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // UI
-  // ──────────────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -339,9 +333,7 @@ class _ViewPrescriptionState extends State<ViewPrescription> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// QR Page (unchanged)
-// ─────────────────────────────────────────────────────────────────────────────
+
 class QrPage extends StatelessWidget {
   final String prescriptionId;
   const QrPage({super.key, required this.prescriptionId});
@@ -352,7 +344,7 @@ class QrPage extends StatelessWidget {
       appBar: AppBar(title: const Text('Prescription QR Code')),
       body: Center(
         child: QrImageView(
-          data: prescriptionId,
+          data: "pres-$prescriptionId",
           version: QrVersions.auto,
           size: 240.0,
         ),
