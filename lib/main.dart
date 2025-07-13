@@ -2,6 +2,7 @@ import 'package:drugscript/screens/homepage.dart';
 import 'package:drugscript/screens/add_prescription.dart';
 import 'package:drugscript/screens/medicine_search.dart';
 import 'package:drugscript/screens/profile.dart';
+import 'package:drugscript/screens/reminder.dart';
 import 'package:drugscript/screens/review_page.dart';
 import 'package:drugscript/screens/view_prescriptions.dart';
 import 'package:drugscript/screens/wrapper.dart';
@@ -23,7 +24,10 @@ void main() async {
 
   // Preload SVG assets
   final loader = SvgAssetLoader('assets/logo.svg');
-  await svg.cache.putIfAbsent(loader.cacheKey(null), () => loader.loadBytes(null));
+  await svg.cache.putIfAbsent(
+    loader.cacheKey(null),
+    () => loader.loadBytes(null),
+  );
 
   await Firebase.initializeApp();
   runApp(const MyApp());
@@ -52,7 +56,7 @@ class MyApp extends StatelessWidget {
             builder: (_) => PrescriptionDetails(prescriptionId: prescriptionId),
           );
         }
-        
+
         // Handle other routes
         switch (settings.name) {
           case '/':
@@ -77,6 +81,8 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(builder: (_) => const ChatPage());
           case '/reviews':
             return MaterialPageRoute(builder: (_) => const ReviewHomePage());
+          case '/reminder':
+            return MaterialPageRoute(builder: (_) => const ReminderPage());
         }
         return null;
       },

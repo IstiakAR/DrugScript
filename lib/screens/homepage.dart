@@ -314,7 +314,7 @@ class _HomePageState extends State<HomePage> {
                         width: double.infinity,
                         child: TextButton.icon(
                           onPressed: () {
-                            Navigator.pushReplacementNamed(context, '/emptyPage');
+                            Navigator.pushReplacementNamed(context, '/reminder');
                           },
                           icon: const Icon(Icons.visibility, size: 20),
                           label: const Text(

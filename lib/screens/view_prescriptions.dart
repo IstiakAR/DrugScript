@@ -48,14 +48,14 @@ class _ViewPrescriptionState extends State<ViewPrescription> {
   Future<void> _saveCache(String rawJson) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_cacheKey, rawJson);
-    await prefs.setInt('${_cacheKey}:ts', DateTime.now().millisecondsSinceEpoch);
+    await prefs.setInt('$_cacheKey:ts', DateTime.now().millisecondsSinceEpoch);
   }
 
   /// Returns `null` if no (fresh) cache exists; otherwise returns the decoded
   /// prescription list.
   Future<List<Map<String, dynamic>>?> _loadCache() async {
     final prefs = await SharedPreferences.getInstance();
-    final ts = prefs.getInt('${_cacheKey}:ts');
+    final ts = prefs.getInt('$_cacheKey:ts');
     if (ts == null) return null; // never cached
 
     final age = DateTime.now().difference(
