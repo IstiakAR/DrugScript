@@ -107,27 +107,11 @@ class _PrescriptionDetailsState extends State<PrescriptionDetails> {
 
   String _formatFrequency(Map<String, dynamic> frequency) {
     String formatted = '';
-    if(frequency['morning'] == true) {
-      formatted += '1';
-    }else{
-      formatted += '0';
-    }
-
+    formatted += frequency['morning'].toString();
     formatted += ' - ';
-
-    if(frequency['lunch'] == true) {
-      formatted += '1';
-    }else{
-      formatted += '0';
-    }
-
+    formatted += frequency['lunch'].toString();
     formatted += ' - ';
-
-    if(frequency['dinner'] == true) {
-      formatted += '1';
-    }else{
-      formatted += '0';
-    }
+    formatted += frequency['dinner'].toString();
 
     print('Formatted frequency: $formatted');
 
