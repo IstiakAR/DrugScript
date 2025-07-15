@@ -66,6 +66,30 @@ class _MedicineSearchAppState extends State<MedicineSearchApp> {
     }
   }
 
+  IconData _getMedicineTypeIcon(String dosageForm) {
+    final form = dosageForm.toLowerCase();
+
+    if (form.contains('tablet') || form.contains('pill')) {
+      return Icons.local_pharmacy_rounded;
+    } else if (form.contains('syrup') ||
+        form.contains('liquid') ||
+        form.contains('solution')) {
+      return Icons.opacity_rounded;
+    } else if (form.contains('injection') || form.contains('syringe')) {
+      return Icons.vaccines_rounded;
+    } else if (form.contains('cream') ||
+        form.contains('ointment') ||
+        form.contains('gel')) {
+      return Icons.sanitizer_rounded;
+    } else if (form.contains('capsule')) {
+      return Icons.medication_rounded;
+    } else if (form.contains('drop')) {
+      return Icons.water_drop_rounded;
+    }
+
+    return Icons.medication_rounded;
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +107,6 @@ class _MedicineSearchAppState extends State<MedicineSearchApp> {
       body: SafeArea(
         child: Column(
           children: [
-      
       
             if (!widget.selectionMode) // Show this only in regular mode
             Padding(
@@ -149,87 +172,215 @@ class _MedicineSearchAppState extends State<MedicineSearchApp> {
                               ],
                             ),
                           )
-      
-                          : ListView.builder(
-                            padding: EdgeInsets.symmetric(horizontal: 16),
+
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(16),
                             itemCount: searchResults.length,
                             itemBuilder: (context, index) {
                               final medicine = searchResults[index];
-                              return Card(
-                                margin: EdgeInsets.symmetric(vertical: 6),
-                                elevation: 1,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.04),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
                                 ),
-                                child: ListTile(
-                                  contentPadding: EdgeInsets.all(12),
-                                  title: Text(
-                                    medicine['medicine_name'],
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
+                                child: Material(
+                                  color: Colors.transparent,
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(16),
+                                    onTap: () {
+                                      if (widget.selectionMode) {
+                                        Navigator.pop(context, medicine);
+                                      } else {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder:
+                                                (context) => MedicineDetailPage(
+                                                  medicine: medicine,
+                                                ),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16),
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          // Medicine Icon/Avatar
+                                          Container(
+                                            width: 50,
+                                            height: 50,
+                                            decoration: BoxDecoration(
+                                              color: const Color(
+                                                0xFF5C6BC0,
+                                              ).withOpacity(0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            child: Center(
+                                              child: Icon(
+                                                _getMedicineTypeIcon(
+                                                  medicine['dosage form'] ?? '',
+                                                ),
+                                                color: const Color(0xFF5C6BC0),
+                                                size: 28,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 16),
+
+                                          // Medicine Info
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  medicine['medicine_name'] ??
+                                                      'Unknown Medicine',
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 16,
+                                                    color: Color(0xFF2C3E50),
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 6),
+                                                Text(
+                                                  '${medicine['generic_name'] ?? 'Unknown Generic'} ${medicine['strength'] ?? ''}',
+                                                  style: const TextStyle(
+                                                    fontSize: 14,
+                                                    color: Color(0xFF2C3E50),
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 6),
+                                                Row(
+                                                  children: [
+                                                    const Icon(
+                                                      Icons.business_outlined,
+                                                      size: 14,
+                                                      color: Color(0xFF7F8C8D),
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    Expanded(
+                                                      child: Text(
+                                                        medicine['manufacturer_name'] ??
+                                                            'Unknown Manufacturer',
+                                                        style: const TextStyle(
+                                                          fontSize: 13,
+                                                          color: Color(
+                                                            0xFF7F8C8D,
+                                                          ),
+                                                        ),
+                                                        maxLines: 1,
+                                                        overflow:
+                                                            TextOverflow
+                                                                .ellipsis,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 8),
+
+                                                // Bottom Row - Dosage form tag and price
+                                                Row(
+                                                  children: [
+                                                    if (medicine['dosage form'] !=
+                                                        null)
+                                                      Container(
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              horizontal: 8,
+                                                              vertical: 4,
+                                                            ),
+                                                        decoration: BoxDecoration(
+                                                          color: const Color(
+                                                            0xFF42A5F5,
+                                                          ).withOpacity(0.1),
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                6,
+                                                              ),
+                                                        ),
+                                                        child: Text(
+                                                          medicine['dosage form'],
+                                                          style:
+                                                              const TextStyle(
+                                                                fontSize: 12,
+                                                                color: Color(
+                                                                  0xFF42A5F5,
+                                                                ),
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w500,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                    const Spacer(),
+
+                                                    // Price
+                                                    Text(
+                                                      '৳${medicine['price'] ?? 'N/A'}',
+                                                      style: const TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 16,
+                                                        color: Color(
+                                                          0xFF4CAF50,
+                                                        ),
+                                                      ),
+                                                    ),
+
+                                                    // Add icon in selection mode
+                                                    if (widget.selectionMode)
+                                                      Padding(
+                                                        padding:
+                                                            const EdgeInsets.only(
+                                                              left: 12,
+                                                            ),
+                                                        child: Container(
+                                                          width: 28,
+                                                          height: 28,
+                                                          decoration:
+                                                              const BoxDecoration(
+                                                                color: Color(
+                                                                  0xFF4CAF50,
+                                                                ),
+                                                                shape:
+                                                                    BoxShape
+                                                                        .circle,
+                                                              ),
+                                                          child: const Icon(
+                                                            Icons.add,
+                                                            color: Colors.white,
+                                                            size: 18,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                  subtitle: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      SizedBox(height: 4),
-                                      Text(
-                                        '${medicine['generic_name']} ${medicine['strength']}',
-                                      ),
-                                      SizedBox(height: 2),
-                                      Text(
-                                        'Manufacturer: ${medicine['manufacturer_name']}',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey.shade700,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        '৳${medicine['price']}',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                          color: Colors.blue.shade800,
-                                        ),
-                                      ),
-                                      if (widget.selectionMode)
-                                        Padding(
-                                          padding: const EdgeInsets.only(left: 8.0),
-                                          child: Icon(
-                                            Icons.add_circle_outline,
-                                            color: Colors.green,
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-      
-                                  onTap: () {
-                                    if (widget.selectionMode) {
-                                      // Return the medicine to the prescription screen
-                                      Navigator.pop(context, medicine);
-                                    } else {
-                                      // Navigate to medicine details
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => MedicineDetailPage(
-                                            medicine: medicine,
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                  },
                                 ),
                               );
                             },
                           ),
+      
                 ),
           ],
         ),
