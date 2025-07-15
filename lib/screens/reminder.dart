@@ -1,5 +1,7 @@
-import 'dart:async' show Timer;
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:drugscript/main.dart'; // to access flutterLocalNotificationsPlugin
 
 class ReminderPage extends StatefulWidget {
   const ReminderPage({super.key});
@@ -9,14 +11,12 @@ class ReminderPage extends StatefulWidget {
 }
 
 class _ReminderPageState extends State<ReminderPage> {
-  // Sample reminder list
   List<Map<String, dynamic>> reminders = [
     {'medicine': 'Paracetamol', 'time': '8:00 AM', 'taken': false},
     {'medicine': 'Vitamin C', 'time': '1:30 PM', 'taken': false},
     {'medicine': 'Aspirin', 'time': '8:00 PM', 'taken': false},
   ];
 
-  // Timer to check reminder times
   late Timer _timer;
 
   @override
@@ -25,14 +25,13 @@ class _ReminderPageState extends State<ReminderPage> {
     _startReminderTimer();
   }
 
-  // Start the reminder timer to check every minute
   void _startReminderTimer() {
-    _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
+    // Checking reminders every 60 seconds
+    _timer = Timer.periodic(const Duration(seconds: 60), (timer) {
       _checkReminders();
     });
   }
 
-  // Check if any reminder time has passed
   void _checkReminders() {
     final currentTime = TimeOfDay.now();
     for (var i = 0; i < reminders.length; i++) {
@@ -43,39 +42,63 @@ class _ReminderPageState extends State<ReminderPage> {
         setState(() {
           reminders[i]['taken'] = true;
         });
+        _showNotification(reminders[i]['medicine']);
       }
     }
   }
 
-  // Convert string time (e.g., "8:00 AM") to TimeOfDay
   TimeOfDay _stringToTimeOfDay(String time) {
     final parts = time.split(' ');
     final timeParts = parts[0].split(':');
     int hour = int.parse(timeParts[0]);
     final minute = int.parse(timeParts[1]);
 
-    // Convert hour based on AM/PM
     if (parts[1].toUpperCase() == 'PM' && hour != 12) {
-      hour += 12;  // Convert PM times to 24-hour format
+      hour += 12;
     } else if (parts[1].toUpperCase() == 'AM' && hour == 12) {
-      hour = 0;  // Convert 12 AM to 0 hours
+      hour = 0;
     }
 
     return TimeOfDay(hour: hour, minute: minute);
   }
 
-  // Dispose the timer when not needed
+  Future<void> _showNotification(String medicine) async {
+    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      'reminder_channel',
+      'Medicine Reminders',
+      channelDescription: 'Channel for medicine reminders',
+      importance: Importance.max,
+      priority: Priority.high,
+      ticker: 'ticker',
+    );
+
+    const NotificationDetails platformDetails = NotificationDetails(
+      android: androidDetails,
+    );
+
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      'Time to take your medicine!',
+      'Please take $medicine now.',
+      platformDetails,
+    );
+  }
+
   @override
   void dispose() {
     _timer.cancel();
     super.dispose();
   }
 
-  // Method to toggle the "taken" status of a reminder
   void _toggleReminderStatus(int index) {
     setState(() {
       reminders[index]['taken'] = !reminders[index]['taken'];
     });
+  }
+
+  // Test button to trigger a manual notification
+  void _triggerTestNotification() {
+    _showNotification('Test Medicine');
   }
 
   @override
@@ -89,7 +112,7 @@ class _ReminderPageState extends State<ReminderPage> {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF4A637D)),
             onPressed: () {
-              Navigator.pushNamed(context, '/homePage'); // Navigate to Home Page
+              Navigator.pushNamed(context, '/homePage');
             },
             tooltip: "Back",
           ),
@@ -120,7 +143,6 @@ class _ReminderPageState extends State<ReminderPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header Section
               const Text(
                 'Medicine Reminders',
                 style: TextStyle(
@@ -130,8 +152,7 @@ class _ReminderPageState extends State<ReminderPage> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Reminder Items
+              // Reminder items
               for (int i = 0; i < reminders.length; i++)
                 _buildReminderItem(
                   reminders[i]['medicine'],
@@ -139,15 +160,11 @@ class _ReminderPageState extends State<ReminderPage> {
                   reminders[i]['taken'],
                   i,
                 ),
-
               const SizedBox(height: 16),
-
-              // Add New Reminder Button
               SizedBox(
                 width: double.infinity,
                 child: TextButton.icon(
                   onPressed: () {
-                    // Navigate to Add Reminder Page
                     Navigator.pushNamed(context, '/reminder');
                   },
                   icon: const Icon(Icons.add, size: 20),
@@ -160,6 +177,12 @@ class _ReminderPageState extends State<ReminderPage> {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                 ),
+              ),
+              const SizedBox(height: 16),
+              // Test button to trigger a manual reminder
+              ElevatedButton(
+                onPressed: _triggerTestNotification,
+                child: const Text('Test Notification'),
               ),
             ],
           ),

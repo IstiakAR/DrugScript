@@ -50,6 +50,7 @@ dependencies:
   fl_chart: ^1.0.0
   flutter_rating_bar: ^4.0.1
   dropdown_search: ^5.0.3
+  flutter_local_notifications: ^19.3.0
 
 dev_dependencies:
   flutter_test:
