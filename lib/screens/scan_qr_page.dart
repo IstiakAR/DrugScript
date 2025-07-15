@@ -2,15 +2,12 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ui';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:lottie/lottie.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class ScanQrPage extends StatefulWidget {
@@ -36,7 +33,6 @@ class _ScanQrPageState extends State<ScanQrPage> with SingleTickerProviderStateM
   // Color scheme to match previous screens
   final Color _primaryColor = const Color(0xFF5C6BC0); // Indigo
   final Color _accentColor = const Color(0xFF42A5F5); // Blue
-  final Color _successColor = const Color(0xFF4CAF50); // Green
   final Color _errorColor = const Color(0xFFEF5350); // Red
   
   final ImagePicker _picker = ImagePicker();
