@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'medicine_search.dart';
+import 'package:drugscript/models/cart_item.dart';
 
 class AddPrescription extends StatefulWidget {
   const AddPrescription({super.key});
@@ -181,15 +182,16 @@ class _AddPrescriptionState extends State<AddPrescription> {
     );
   }
 
-
   // Navigate to medicine search and handle selection
   Future<void> _navigateToMedicineSearch() async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder:
-            (context) => const MedicineSearchApp(
-              selectionMode: true, // Enable selection mode
+            (context) => MedicineSearchApp(
+              cart: <CartItem>[],
+              addToCart: (item) {},
+              selectionMode: true, // <-- Add this line
             ),
       ),
     );
@@ -197,7 +199,7 @@ class _AddPrescriptionState extends State<AddPrescription> {
     print(
       "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
     );
-    print("getttttting $result"); 
+    print("getttttting $result");
 
     if (result != null && result is Map<String, dynamic>) {
       setState(() {
@@ -236,7 +238,6 @@ class _AddPrescriptionState extends State<AddPrescription> {
     }
     return await user.getIdToken(true);
   }
-
 
   Future<void> _createPrescription() async {
     if (_doctorNameController.text.isEmpty) {
@@ -280,20 +281,18 @@ class _AddPrescriptionState extends State<AddPrescription> {
       }
 
       final List<Map<String, dynamic>> medicineSlugsWithFreqDays = [];
-      
+
       for (var medicine in selectedMedicines) {
-        if (medicine['slug'] != null && medicine['slug'] is String ) {
-          medicineSlugsWithFreqDays.add(
-            {
-              'slug': medicine['slug'],
-              'frequency': {
-                'morning': medicine['morning'] ?? false,
-                'lunch': medicine['lunch'] ?? false,
-                'dinner': medicine['dinner'] ?? false,
-              },
-              'days': medicine['days'] ?? 1, 
+        if (medicine['slug'] != null && medicine['slug'] is String) {
+          medicineSlugsWithFreqDays.add({
+            'slug': medicine['slug'],
+            'frequency': {
+              'morning': medicine['morning'] ?? false,
+              'lunch': medicine['lunch'] ?? false,
+              'dinner': medicine['dinner'] ?? false,
             },
-          );
+            'days': medicine['days'] ?? 1,
+          });
         }
       }
 
@@ -303,7 +302,8 @@ class _AddPrescriptionState extends State<AddPrescription> {
       final Map<String, dynamic> payload = {
         'doctor_name': _doctorNameController.text,
         'contact': _contactController.text,
-        'medicines': medicineSlugsWithFreqDays, // Make sure this is a list of maps/dictionaries
+        'medicines':
+            medicineSlugsWithFreqDays, // Make sure this is a list of maps/dictionaries
         'image': base64Image,
         'date':
             _selectedDate != null
@@ -380,10 +380,8 @@ class _AddPrescriptionState extends State<AddPrescription> {
     super.dispose();
   }
 
-
   Timer? _decrementTimer;
   Timer? _incrementTimer;
-
 
   Widget _buildTimingButton({
     required BuildContext context,
@@ -810,7 +808,12 @@ class _AddPrescriptionState extends State<AddPrescription> {
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18,
-                                      color: const Color.fromARGB(255,0,145,153,),
+                                      color: const Color.fromARGB(
+                                        255,
+                                        0,
+                                        145,
+                                        153,
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 8),
@@ -905,7 +908,7 @@ class _AddPrescriptionState extends State<AddPrescription> {
                                           }
                                         });
                                       },
-                                      
+
                                       onDoubleTap: () {
                                         setState(() {
                                           medicine['days'] = 1;
@@ -993,14 +996,9 @@ class _AddPrescriptionState extends State<AddPrescription> {
                                           horizontal: 6,
                                           vertical: 2,
                                         ),
-                                        child: const Icon(
-                                          Icons.add,
-                                          size: 30,
-                                        ),
+                                        child: const Icon(Icons.add, size: 30),
                                       ),
                                     ),
-
-
                                   ],
                                 ),
                               ),

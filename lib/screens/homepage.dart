@@ -32,20 +32,21 @@ class _HomePageState extends State<HomePage> {
       onWillPop: () async {
         final shouldExit = await showDialog<bool>(
           context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Exit App'),
-            content: const Text('Are you sure you want to exit the app?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
+          builder:
+              (context) => AlertDialog(
+                title: const Text('Exit App'),
+                content: const Text('Are you sure you want to exit the app?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: const Text('Exit'),
+                  ),
+                ],
               ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Exit'),
-              ),
-            ],
-          ),
         );
         return shouldExit ?? false;
       },
@@ -107,7 +108,8 @@ class _HomePageState extends State<HomePage> {
                                                     children: [
                                                       QrImageView(
                                                         data: 'USERID-$userId',
-                                                        version: QrVersions.auto,
+                                                        version:
+                                                            QrVersions.auto,
                                                         size:
                                                             MediaQuery.of(
                                                               context,
@@ -116,7 +118,9 @@ class _HomePageState extends State<HomePage> {
                                                         backgroundColor:
                                                             Colors.white,
                                                       ),
-                                                      const SizedBox(height: 12),
+                                                      const SizedBox(
+                                                        height: 12,
+                                                      ),
                                                       Text(
                                                         "ID: $userId",
                                                         style: const TextStyle(
@@ -145,10 +149,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         GestureDetector(
                           onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              '/profilePage',
-                            );
+                            Navigator.pushNamed(context, '/profilePage');
                           },
                           child: CircleAvatar(
                             radius: 22,
@@ -256,12 +257,24 @@ class _HomePageState extends State<HomePage> {
                       Icons.forum,
                       Color.fromARGB(255, 100, 149, 237),
                       '/chatPage',
-                    ),                  
+                    ),
                     _buildActionCard(
                       'Reviews',
                       Icons.forum,
                       Color.fromARGB(255, 217, 219, 90),
                       '/reviews',
+                    ),
+                    _buildActionCard(
+                      'Medicine Delivery',
+                      Icons.forum,
+                      Color.fromARGB(255, 217, 219, 90),
+                      '/medicineDelivery',
+                    ),
+                    _buildActionCard(
+                      'Ambulance services',
+                      Icons.car_rental,
+                      Color.fromARGB(255, 217, 219, 90),
+                      '/ambulanceServices',
                     ),
                   ],
                 ),
@@ -314,7 +327,10 @@ class _HomePageState extends State<HomePage> {
                         width: double.infinity,
                         child: TextButton.icon(
                           onPressed: () {
-                            Navigator.pushReplacementNamed(context, '/emptyPage');
+                            Navigator.pushReplacementNamed(
+                              context,
+                              '/emptyPage',
+                            );
                           },
                           icon: const Icon(Icons.visibility, size: 20),
                           label: const Text(
