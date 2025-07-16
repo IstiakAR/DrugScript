@@ -24,7 +24,6 @@ class _SharingHistoryState extends State<SharingHistory>
 
   // Color scheme to match previous screens
   final Color _primaryColor = const Color(0xFF5C6BC0); // Indigo
-  final Color _accentColor = const Color(0xFF42A5F5); // Blue
   final Color _sentColor = const Color(0xFF5C6BC0); // Indigo
   final Color _receivedColor = const Color(0xFF4CAF50); // Green
   final Color _bgColor = const Color(0xFFF5F7FA); // Light gray background
