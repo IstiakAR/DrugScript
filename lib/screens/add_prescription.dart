@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'medicine_search.dart';
+import 'package:drugscript/models/cart_item.dart';
 
 class AddPrescription extends StatefulWidget {
   const AddPrescription({super.key});
@@ -195,12 +196,29 @@ class _AddPrescriptionState extends State<AddPrescription> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
+<<<<<<< HEAD
+        builder:
+            (context) => MedicineSearchApp(
+              cart: <CartItem>[],
+              addToCart: (item) {},
+              selectionMode: true, // <-- Add this line
+            ),
+      ),
+    );
+
+    print(
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    );
+    print("getttttting $result");
+
+=======
         builder: (context) => const MedicineSearchApp(
           selectionMode: true, // Enable selection mode
         ),
       ),
     );
 
+>>>>>>> d8701f93c102b84f36a0f4b6e2052a651e360d7b
     if (result != null && result is Map<String, dynamic>) {
       setState(() {
         // Check if medicine is already in the list
@@ -284,9 +302,15 @@ class _AddPrescriptionState extends State<AddPrescription> {
           medicineSlugsWithFreqDays.add({
             'slug': medicine['slug'],
             'frequency': {
+<<<<<<< HEAD
+              'morning': medicine['morning'] ?? false,
+              'lunch': medicine['lunch'] ?? false,
+              'dinner': medicine['dinner'] ?? false,
+=======
               'morning': medicine['morning'] ?? 0,
               'lunch': medicine['lunch'] ?? 0,
               'dinner': medicine['dinner'] ?? 0,
+>>>>>>> d8701f93c102b84f36a0f4b6e2052a651e360d7b
             },
             'days': medicine['days'] ?? 1,
           });
@@ -297,7 +321,12 @@ class _AddPrescriptionState extends State<AddPrescription> {
       final Map<String, dynamic> payload = {
         'doctor_name': _doctorNameController.text,
         'contact': _contactController.text,
+<<<<<<< HEAD
+        'medicines':
+            medicineSlugsWithFreqDays, // Make sure this is a list of maps/dictionaries
+=======
         'medicines': medicineSlugsWithFreqDays,
+>>>>>>> d8701f93c102b84f36a0f4b6e2052a651e360d7b
         'image': base64Image,
         'date': _selectedDate != null
             ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
@@ -1043,7 +1072,16 @@ class _AddPrescriptionState extends State<AddPrescription> {
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18,
+<<<<<<< HEAD
+                                      color: const Color.fromARGB(
+                                        255,
+                                        0,
+                                        145,
+                                        153,
+                                      ),
+=======
                                       color: accentColor,
+>>>>>>> d8701f93c102b84f36a0f4b6e2052a651e360d7b
                                     ),
                                   ),
                                   const SizedBox(height: 4),
@@ -1117,6 +1155,16 @@ class _AddPrescriptionState extends State<AddPrescription> {
                                           }
                                         });
                                       },
+<<<<<<< HEAD
+
+                                      onDoubleTap: () {
+                                        setState(() {
+                                          medicine['days'] = 1;
+                                        });
+                                      },
+
+=======
+>>>>>>> d8701f93c102b84f36a0f4b6e2052a651e360d7b
                                       onLongPressStart: (_) {
                                         _decrementTimer = Timer.periodic(
                                           const Duration(milliseconds: 100),
@@ -1174,6 +1222,16 @@ class _AddPrescriptionState extends State<AddPrescription> {
                                       onLongPressEnd: (_) {
                                         _incrementTimer?.cancel();
                                       },
+<<<<<<< HEAD
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 6,
+                                          vertical: 2,
+                                        ),
+                                        child: const Icon(Icons.add, size: 30),
+                                      ),
+=======
+>>>>>>> d8701f93c102b84f36a0f4b6e2052a651e360d7b
                                     ),
                                   ],
                                 ),

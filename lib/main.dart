@@ -21,6 +21,9 @@ import 'package:drugscript/screens/splash_screen.dart';
 import 'package:drugscript/screens/scan_qr_page.dart';
 import 'package:drugscript/screens/sharing_history.dart';
 import 'package:drugscript/screens/chat_page.dart';
+import 'package:drugscript/screens/ambulance_services_page.dart';
+import 'package:drugscript/screens/medicineDelivery.dart';
+import 'package:drugscript/models/cart_item.dart';
 
 import 'package:drugscript/theme/app_theme.dart';
 
@@ -53,6 +56,7 @@ void main() async {
 
   runApp(const MyApp());
 }
+// Remove CartItem class from here and import the shared model instead
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -88,7 +92,16 @@ class MyApp extends StatelessWidget {
           case '/homePage':
             return MaterialPageRoute(builder: (_) => const HomePage());
           case '/medicineSearch':
-            return MaterialPageRoute(builder: (_) => const MedicineSearchApp());
+            return MaterialPageRoute(
+              builder:
+                  (_) => MedicineSearchApp(
+                    cart: <CartItem>[],
+                    addToCart: (item) {
+                      // Your logic here
+                    },
+                    selectionMode: true, // <-- Add this line
+                  ),
+            );
           case '/createPrescription':
             return MaterialPageRoute(builder: (_) => const AddPrescription());
           case '/report':
@@ -103,8 +116,20 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(builder: (_) => const ChatPage());
           case '/reviews':
             return MaterialPageRoute(builder: (_) => const ReviewHomePage());
+<<<<<<< HEAD
+          case '/medicineDelivery':
+            return MaterialPageRoute(builder: (_) => const Delivery());
+          case '/ambulanceServices':
+            final currentAddress =
+                settings.arguments as String? ?? "Tap to select location";
+            return MaterialPageRoute(
+              builder:
+                  (_) => AmbulanceServicesPage(currentAddress: currentAddress),
+            );
+=======
           case '/reminder':
             return MaterialPageRoute(builder: (_) => const ReminderPage());
+>>>>>>> d8701f93c102b84f36a0f4b6e2052a651e360d7b
         }
         return null;
       },
