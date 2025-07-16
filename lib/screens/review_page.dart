@@ -1,5 +1,3 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'dart:async';
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -1303,7 +1301,7 @@ class _ReviewPageState extends State<ReviewPage> {
         title: Text(widget.displayName),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: _primaryColor),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [

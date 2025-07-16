@@ -58,11 +58,23 @@ class _HomePageState extends State<HomePage> {
                 child: Text('Cancel', style: TextStyle(color: _textSecondary)),
               ),
               FilledButton(
-                onPressed: () => Navigator.of(context).pop(true),
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                  Future.delayed(const Duration(milliseconds: 100), () {
+                    SystemNavigator.pop();
+                  });
+                },
                 style: FilledButton.styleFrom(
                   backgroundColor: _accentColor,
                 ),
-                child: const Text('Exit'),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.exit_to_app, size: 18, color: Colors.white),
+                    const SizedBox(width: 6),
+                    const Text('Exit'),
+                  ],
+                ),
               ),
             ],
           ),
@@ -74,6 +86,7 @@ class _HomePageState extends State<HomePage> {
         appBar: AppBar(
           backgroundColor: _backgroundColor,
           elevation: 0,
+          automaticallyImplyLeading: false,
           title: Text(
             'DrugScript',
             style: TextStyle(
@@ -105,19 +118,34 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
         body: SafeArea(
-          child: RefreshIndicator(
-            color: _accentColor,
-            onRefresh: _loadUserId,
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                _buildStatRow(),
-                const SizedBox(height: 24),
-                _buildQuickActions(),
-                const SizedBox(height: 24),
-                _buildReminderSection(),
-              ],
-            ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return RefreshIndicator(
+                color: _accentColor,
+                onRefresh: _loadUserId,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _buildStatRow(),
+                          const SizedBox(height: 24),
+                          _buildQuickActions(),
+                          const SizedBox(height: 24),
+                          _buildReminderSection(),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ),
@@ -155,8 +183,8 @@ Widget _buildStatCard(String title, String value, IconData icon) {
       children: [
         // Left accent bar with icon
         Container(
-          width: 70,
-          height: 100,
+          width: 60, // reduced width for smaller screens
+          height: 80, // reduced height for smaller screens
           decoration: BoxDecoration(
             color: _accentColor,
             borderRadius: BorderRadius.circular(12),
@@ -165,15 +193,14 @@ Widget _buildStatCard(String title, String value, IconData icon) {
             child: Icon(
               icon,
               color: Colors.white,
-              size: 30,
+              size: 28,
             ),
           ),
         ),
-        
         // Content section
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
@@ -271,8 +298,8 @@ Widget _buildStatCard(String title, String value, IconData icon) {
         GridView.builder(
           physics: const NeverScrollableScrollPhysics(),
           shrinkWrap: true,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 4,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: MediaQuery.of(context).size.width > 600 ? 6 : 4,
             crossAxisSpacing: 12,
             mainAxisSpacing: 16,
             childAspectRatio: 0.8,
@@ -312,16 +339,18 @@ Widget _buildStatCard(String title, String value, IconData icon) {
             child: Icon(icon, color: color, size: 28),
           ),
           const SizedBox(height: 8),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: _textPrimary,
+          Flexible(
+            child: Text(
+              title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 9, // slightly smaller
+                fontWeight: FontWeight.w500,
+                color: _textPrimary,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -444,64 +473,66 @@ Widget _buildStatCard(String title, String value, IconData icon) {
   
   void _showQrCode() {
     if (userId == null) return;
-    
+
     showDialog(
       context: context,
       builder: (context) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'My QR Code',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: _textPrimary,
-                ),
-              ),
-              const SizedBox(height: 24),
-              QrImageView(
-                data: 'USERID-$userId',
-                version: QrVersions.auto,
-                size: 200,
-                backgroundColor: Colors.white,
-                foregroundColor: _primaryColor,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'ID: ${userId?.substring(0, 8)}...',
-                style: TextStyle(
-                  color: _textSecondary,
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text(
-                      'Close',
-                      style: TextStyle(color: _textSecondary),
-                    ),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'My QR Code',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: _textPrimary,
                   ),
-                  FilledButton(
-                    onPressed: () {
-                      // Implement share function
-                      Navigator.pop(context);
-                    },
-                    style: FilledButton.styleFrom(
-                      backgroundColor: _accentColor,
-                    ),
-                    child: const Text('Share'),
+                ),
+                const SizedBox(height: 24),
+                QrImageView(
+                  data: 'USERID-$userId',
+                  version: QrVersions.auto,
+                  size: 200,
+                  backgroundColor: Colors.white,
+                  foregroundColor: _primaryColor,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'ID: ${userId?.substring(0, 8)}...',
+                  style: TextStyle(
+                    color: _textSecondary,
+                    fontSize: 14,
                   ),
-                ],
-              )
-            ],
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        'Close',
+                        style: TextStyle(color: _textSecondary),
+                      ),
+                    ),
+                    FilledButton(
+                      onPressed: () {
+                        // Implement share function
+                        Navigator.pop(context);
+                      },
+                      style: FilledButton.styleFrom(
+                        backgroundColor: _accentColor,
+                      ),
+                      child: const Text('Share'),
+                    ),
+                  ],
+                )
+              ],
+            ),
           ),
         ),
       ),
