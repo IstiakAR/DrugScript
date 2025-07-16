@@ -1139,13 +1139,13 @@ class _AddPrescriptionState extends State<AddPrescription> {
                                     
                                     // Days count
                                     Container(
-                                      constraints: const BoxConstraints(minWidth: 70),
-                                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                                      constraints: const BoxConstraints(minWidth: 40), // Reduced from 70
+                                      padding: const EdgeInsets.symmetric(horizontal: 4), // Reduced padding
                                       child: Text(
                                         '${medicine['days'] ?? 1} days',
                                         textAlign: TextAlign.center,
                                         style: const TextStyle(
-                                          fontSize: 16,
+                                          fontSize: 14,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),

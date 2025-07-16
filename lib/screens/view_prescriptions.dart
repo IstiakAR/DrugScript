@@ -73,9 +73,40 @@ class _ViewPrescriptionState extends State<ViewPrescription>
   // ──────────────────────────────────────────────────────────────────────────
   // CACHING HELPERS
   // ──────────────────────────────────────────────────────────────────────────
+  // Add this helper to get active prescription count
+  int get activePrescriptionCount =>
+      _prescriptions.where((p) => p['isActive'] == true).length;
+
   Future<void> _saveCache(String rawJson) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_cacheKey, rawJson);
+    final decoded = jsonDecode(rawJson) as Map<String, dynamic>;
+    final prescriptions = List<Map<String, dynamic>>.from(decoded['prescriptions']);
+
+    // Load previous cache to preserve isActive
+    final prevRaw = prefs.getString(_cacheKey);
+    Map<String, bool> prevActive = {};
+    if (prevRaw != null) {
+      try {
+        final prevDecoded = jsonDecode(prevRaw) as Map<String, dynamic>;
+        final prevPrescriptions = List<Map<String, dynamic>>.from(prevDecoded['prescriptions']);
+        for (var p in prevPrescriptions) {
+          if (p['prescription_id'] != null) {
+            prevActive[p['prescription_id']] = p['isActive'] ?? false;
+          }
+        }
+      } catch (_) {}
+    }
+
+    // Use current isActive if present, otherwise use previous value
+    for (var p in prescriptions) {
+      final pid = p['prescription_id'];
+      if (p['isActive'] == null) {
+        p['isActive'] = prevActive[pid] ?? false;
+      }
+      // Otherwise, keep the current value
+    }
+
+    await prefs.setString(_cacheKey, jsonEncode({'prescriptions': prescriptions}));
     await prefs.setInt('$_cacheKey:ts', DateTime.now().millisecondsSinceEpoch);
   }
 
@@ -95,7 +126,11 @@ class _ViewPrescriptionState extends State<ViewPrescription>
     if (rawJson == null) return null; // shouldn't happen
 
     final decoded = jsonDecode(rawJson) as Map<String, dynamic>;
-    return List<Map<String, dynamic>>.from(decoded['prescriptions']);
+    final prescriptions = List<Map<String, dynamic>>.from(decoded['prescriptions']);
+    for (var p in prescriptions) {
+      p['isActive'] ??= false;
+    }
+    return prescriptions;
   }
 
   Future<String?> _getAuthToken() async {
@@ -126,10 +161,11 @@ class _ViewPrescriptionState extends State<ViewPrescription>
         // what came from the server.
         await _saveCache(response.body);
 
-        final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+        // FIX: Load merged cache and set _prescriptions from it
+        final mergedPrescriptions = await _loadCache();
         if (mounted) {
           setState(() {
-            _prescriptions = List<Map<String, dynamic>>.from(decoded['prescriptions']);
+            _prescriptions = mergedPrescriptions ?? [];
             _isFirstLoad = false;
           });
 
@@ -270,6 +306,23 @@ class _ViewPrescriptionState extends State<ViewPrescription>
     }
   }
 
+  // Add toggleActivePrescription method
+  Future<void> _toggleActivePrescription(String prescriptionId) async {
+    setState(() {
+      final idx = _prescriptions.indexWhere((p) => p['prescription_id'] == prescriptionId);
+      if (idx != -1) {
+        _prescriptions[idx]['isActive'] = !(_prescriptions[idx]['isActive'] ?? false);
+        print('Toggled prescription $prescriptionId to: ${_prescriptions[idx]['isActive']}');
+      }
+    });
+    
+    // Save the updated prescriptions
+    await _saveCache(jsonEncode({'prescriptions': _prescriptions}));
+    
+    // Print active count after toggle
+    print('Active count after toggle: ${activePrescriptionCount}');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -400,7 +453,8 @@ class _ViewPrescriptionState extends State<ViewPrescription>
           final prescription = _prescriptions[index];
           final formattedDate = _formatDate(prescription['date']);
           final prescriptionId = prescription['prescription_id'] as String;
-          
+          final isActive = prescription['isActive'] ?? false;
+
           return Slidable(
             key: Key(prescriptionId),
             endActionPane: ActionPane(
@@ -552,6 +606,15 @@ class _ViewPrescriptionState extends State<ViewPrescription>
                                     builder: (_) => QrPage(prescriptionId: prescriptionId),
                                   ),
                                 ),
+                              ),
+                              // Add Activate/Deactivate button
+                              IconButton(
+                                icon: Icon(
+                                  isActive ? Icons.check_circle : Icons.radio_button_unchecked,
+                                  color: isActive ? Colors.green : Colors.grey,
+                                ),
+                                tooltip: isActive ? 'Deactivate' : 'Activate',
+                                onPressed: () => _toggleActivePrescription(prescriptionId),
                               ),
                             ],
                           ),

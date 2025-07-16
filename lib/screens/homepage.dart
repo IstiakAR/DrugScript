@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,7 +16,9 @@ class _HomePageState extends State<HomePage> {
   String? userId;
   final AuthService _authService = AuthService();
   bool _hasUnreadMention = false;
+  int _activePrescriptionCount = 0;
   static const String _mentionKey = 'has_unread_mention';
+  static const String _activePrescriptionsCountKey = 'active_prescriptions_count';
 
   // Design colors
   final Color _primaryColor = const Color(0xFF5C6BC0); // Dark blue-gray
@@ -30,6 +33,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _loadUserId();
     _checkForMentions();
+    _loadActivePrescriptionCount();
     
     // Set status bar style
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
@@ -58,6 +62,36 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _loadActivePrescriptionCount() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cachedPrescriptionsJson = prefs.getString('cached_prescriptions_v2');
+      if (cachedPrescriptionsJson != null) {
+        try {
+          final decoded = jsonDecode(cachedPrescriptionsJson) as Map<String, dynamic>;
+          final prescriptionsRaw = decoded['prescriptions'] as List<dynamic>;
+          int activeCount = 0;
+          for (var p in prescriptionsRaw) {
+            // Defensive: handle both Map<String, dynamic> and Map<dynamic, dynamic>
+            final prescription = Map<String, dynamic>.from(p as Map);
+            if (prescription['isActive'] == true) {
+              activeCount++;
+            }
+          }
+          setState(() {
+            _activePrescriptionCount = activeCount;
+          });
+          await prefs.setInt(_activePrescriptionsCountKey, activeCount);
+          print('Calculated and saved active prescription count: $activeCount');
+        } catch (e) {
+          print('Error parsing cached prescriptions: $e');
+        }
+      }
+    } catch (e) {
+      print('Error loading active prescription count: $e');
+    }
+  }
+  
   // Call this method when navigating to chat
   void _clearMentions() async {
     try {
@@ -186,7 +220,8 @@ class _HomePageState extends State<HomePage> {
   Widget _buildStatRow() {
     return Row(
       children: [
-        Expanded(child: _buildStatCard('Active Prescriptions', '3', Icons.medication_rounded)),
+        Expanded(child: _buildStatCard('Active \nPrescriptions', 
+          _activePrescriptionCount.toString(), Icons.medication_rounded)),
         const SizedBox(width: 10),
         Expanded(child: _buildStatCard('Today\'s Reminders', '2', Icons.notifications_active_rounded)),
       ],
@@ -237,7 +272,7 @@ Widget _buildStatCard(String title, String value, IconData icon) {
                 Text(
                   title,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 12,
                     fontWeight: FontWeight.w500,
                     color: _textSecondary,
                   ),
@@ -268,25 +303,6 @@ Widget _buildStatCard(String title, String value, IconData icon) {
                       ),
                     ),
                   ],
-                ),
-                
-                // Dots indicator
-                const SizedBox(height: 10),
-                Row(
-                  children: List.generate(
-                    5,
-                    (index) => Container(
-                      width: 6,
-                      height: 6,
-                      margin: const EdgeInsets.only(right: 4),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: index < int.parse(value)
-                            ? _accentColor
-                            : Colors.grey.withOpacity(0.3),
-                      ),
-                    ),
-                  ),
                 ),
               ],
             ),
@@ -354,11 +370,17 @@ Widget _buildStatCard(String title, String value, IconData icon) {
     required Color color,
   }) {
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
         if (route == '/chatPage' && _hasUnreadMention) {
           _clearMentions();
         }
-        Navigator.pushNamed(context, route);
+        if (route == '/viewPrescriptions') {
+          await Navigator.pushNamed(context, route);
+          // Reload active prescription count after returning
+          await _loadActivePrescriptionCount();
+        } else {
+          Navigator.pushNamed(context, route);
+        }
       },
       child: Column(
         children: [
