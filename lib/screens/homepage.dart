@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../services/auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,6 +14,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   String? userId;
   final AuthService _authService = AuthService();
+  bool _hasUnreadMention = false;
+  static const String _mentionKey = 'has_unread_mention';
 
   // Design colors
   final Color _primaryColor = const Color(0xFF5C6BC0); // Dark blue-gray
@@ -26,6 +29,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _loadUserId();
+    _checkForMentions();
     
     // Set status bar style
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
@@ -40,6 +44,30 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         userId = user?.uid;
       });
+    }
+  }
+
+  Future<void> _checkForMentions() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      setState(() {
+        _hasUnreadMention = prefs.getBool(_mentionKey) ?? false;
+      });
+    } catch (e) {
+      print('Error checking mentions: $e');
+    }
+  }
+
+  // Call this method when navigating to chat
+  void _clearMentions() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_mentionKey, false);
+      setState(() {
+        _hasUnreadMention = false;
+      });
+    } catch (e) {
+      print('Error clearing mentions: $e');
     }
   }
 
@@ -277,7 +305,7 @@ Widget _buildStatCard(String title, String value, IconData icon) {
       {'title': 'My Reports', 'icon': Icons.analytics, 'route': '/report', 'color': const Color(0xFF8338EC)},
       {'title': 'Scan QR', 'icon': Icons.qr_code_scanner, 'route': '/scanQrPage', 'color': const Color(0xFF2D3142)},
       {'title': 'Sharing History', 'icon': Icons.share_outlined, 'route': '/sharingHistory', 'color': const Color(0xFFF72585)},
-      {'title': 'Community Chat', 'icon': Icons.forum, 'route': '/chatPage', 'color': const Color(0xFF06D6A0)},
+      {'title': 'Community Chat', 'icon': Icons.forum, 'route': '/chatPage', 'color': _hasUnreadMention ? const Color(0xFFFF0000) : const Color(0xFF06D6A0)},
       {'title': 'Reviews', 'icon': Icons.star, 'route': '/reviews', 'color': const Color(0xFFFF9F1C)},
     ];
 
@@ -326,7 +354,12 @@ Widget _buildStatCard(String title, String value, IconData icon) {
     required Color color,
   }) {
     return GestureDetector(
-      onTap: () => Navigator.pushNamed(context, route),
+      onTap: () {
+        if (route == '/chatPage' && _hasUnreadMention) {
+          _clearMentions();
+        }
+        Navigator.pushNamed(context, route);
+      },
       child: Column(
         children: [
           Container(

@@ -83,11 +83,44 @@ class _ChatPageState extends State<ChatPage> {
       });
       await _preloadUserNames(fetchedMessages); // <-- preload names
       await _cacheMessages();
+      await _checkForMentions(fetchedMessages); // Check for mentions after loading messages
       _scrollToBottom();
     } catch (e) {
       setState(() {
         isLoading = false;
       });
+    }
+  }
+
+  // Add a method to check for mentions
+  Future<void> _checkForMentions(List<dynamic> messages) async {
+    if (currentUserId == null) return;
+    
+    try {
+      // Get current user name
+      final currentUserInfo = await _getUserInfo(currentUserId!);
+      final currentUserName = currentUserInfo['name'] as String;
+      
+      // Check if user is mentioned in any message
+      bool isMentioned = false;
+      for (final message in messages) {
+        final senderId = message['sender_id'];
+        if (senderId != currentUserId) { // Don't count self-mentions
+          final content = message['content'] as String? ?? '';
+          if (content.contains('@$currentUserName')) {
+            isMentioned = true;
+            break;
+          }
+        }
+      }
+      
+      // Store mention status in SharedPreferences
+      if (isMentioned) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('has_unread_mention', true);
+      }
+    } catch (e) {
+      print('Error checking mentions: $e');
     }
   }
 
