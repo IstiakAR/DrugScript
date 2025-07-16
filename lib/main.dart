@@ -1,13 +1,22 @@
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get_navigation/src/root/get_material_app.dart';
+
+// Local Notifications
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
+// Screens
 import 'package:drugscript/screens/homepage.dart';
 import 'package:drugscript/screens/add_prescription.dart';
 import 'package:drugscript/screens/medicine_search.dart';
 import 'package:drugscript/screens/profile.dart';
+import 'package:drugscript/screens/reminder.dart';
 import 'package:drugscript/screens/review_page.dart';
 import 'package:drugscript/screens/view_prescriptions.dart';
 import 'package:drugscript/screens/wrapper.dart';
 import 'package:drugscript/screens/report.dart';
 import 'package:drugscript/screens/prescription_details.dart';
-import 'package:drugscript/theme/app_theme.dart';
 import 'package:drugscript/screens/splash_screen.dart';
 import 'package:drugscript/screens/scan_qr_page.dart';
 import 'package:drugscript/screens/sharing_history.dart';
@@ -16,10 +25,11 @@ import 'package:drugscript/screens/ambulance_services_page.dart';
 import 'package:drugscript/screens/medicineDelivery.dart';
 import 'package:drugscript/models/cart_item.dart';
 
-import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:get/get_navigation/src/root/get_material_app.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:drugscript/theme/app_theme.dart';
+
+/// Global notification plugin instance
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,7 +41,19 @@ void main() async {
     () => loader.loadBytes(null),
   );
 
+  // Initialize Firebase
   await Firebase.initializeApp();
+
+  // Initialize Local Notifications
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@drawable/logo1');
+
+  final InitializationSettings initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid,
+  );
+
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
   runApp(const MyApp());
 }
 // Remove CartItem class from here and import the shared model instead
@@ -56,7 +78,8 @@ class MyApp extends StatelessWidget {
         if (settings.name == '/prescriptionDetails') {
           final prescriptionId = settings.arguments as String;
           return MaterialPageRoute(
-            builder: (_) => PrescriptionDetails(prescriptionId: prescriptionId),
+            builder: (_) =>
+                PrescriptionDetails(prescriptionId: prescriptionId),
           );
         }
 
@@ -93,6 +116,7 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(builder: (_) => const ChatPage());
           case '/reviews':
             return MaterialPageRoute(builder: (_) => const ReviewHomePage());
+<<<<<<< HEAD
           case '/medicineDelivery':
             return MaterialPageRoute(builder: (_) => const Delivery());
           case '/ambulanceServices':
@@ -102,6 +126,10 @@ class MyApp extends StatelessWidget {
               builder:
                   (_) => AmbulanceServicesPage(currentAddress: currentAddress),
             );
+=======
+          case '/reminder':
+            return MaterialPageRoute(builder: (_) => const ReminderPage());
+>>>>>>> d8701f93c102b84f36a0f4b6e2052a651e360d7b
         }
         return null;
       },

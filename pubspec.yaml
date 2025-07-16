@@ -59,7 +59,13 @@ dependencies:
   google_api_headers: ^1.6.0
   location: ^5.0.3
   
-
+  flutter_local_notifications: ^19.3.0
+  timezone: ^0.10.1
+  flutter_slidable: ^3.0.1
+  shimmer: ^3.0.0
+  lottie: ^2.7.0
+  permission_handler: ^11.0.1
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter
