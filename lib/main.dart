@@ -11,7 +11,6 @@ import 'package:drugscript/screens/homepage.dart';
 import 'package:drugscript/screens/add_prescription.dart';
 import 'package:drugscript/screens/medicine_search.dart';
 import 'package:drugscript/screens/profile.dart';
-import 'package:drugscript/screens/reminder.dart';
 import 'package:drugscript/screens/review_page.dart';
 import 'package:drugscript/screens/view_prescriptions.dart';
 import 'package:drugscript/screens/wrapper.dart';
@@ -21,6 +20,7 @@ import 'package:drugscript/screens/splash_screen.dart';
 import 'package:drugscript/screens/scan_qr_page.dart';
 import 'package:drugscript/screens/sharing_history.dart';
 import 'package:drugscript/screens/chat_page.dart';
+import 'package:drugscript/screens/reminder_page.dart';
 
 import 'package:drugscript/theme/app_theme.dart';
 

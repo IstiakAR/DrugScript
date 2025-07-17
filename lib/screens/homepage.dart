@@ -24,7 +24,6 @@ class _HomePageState extends State<HomePage> {
   final Color _primaryColor = const Color(0xFF5C6BC0); // Dark blue-gray
   final Color _accentColor = const Color(0xFF5C6BC0); // Teal accent
   final Color _backgroundColor = Colors.white;
-  final Color _cardColor = const Color(0xFFF9F9F9); // Light gray
   final Color _textPrimary = const Color(0xFF2D3142);
   final Color _textSecondary = const Color(0xFF9A9A9A);
 
@@ -200,7 +199,7 @@ class _HomePageState extends State<HomePage> {
                           const SizedBox(height: 24),
                           _buildQuickActions(),
                           const SizedBox(height: 24),
-                          _buildReminderSection(),
+                          _buildMedicineManagement(),
                         ],
                       ),
                     ),
@@ -222,14 +221,14 @@ class _HomePageState extends State<HomePage> {
       children: [
         Expanded(child: _buildStatCard('Active \nPrescriptions', 
           _activePrescriptionCount.toString(), Icons.medication_rounded)),
-        const SizedBox(width: 10),
-        Expanded(child: _buildStatCard('Today\'s Reminders', '2', Icons.notifications_active_rounded)),
       ],
     );
   }
   
-Widget _buildStatCard(String title, String value, IconData icon) {
-  return Container(
+Widget _buildStatCard(String title, String value, IconData icon, {VoidCallback? onTap}) {
+  return GestureDetector(
+    onTap: onTap,
+    child: Container(
     padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
     decoration: BoxDecoration(
       color: Colors.white,
@@ -268,15 +267,15 @@ Widget _buildStatCard(String title, String value, IconData icon) {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Title
                 Text(
-                  title,
+                  value + ' ' + title,
                   style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: _textSecondary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: _textPrimary,
                   ),
                 ),
+                // Title
                 
                 const SizedBox(height: 8),
                 
@@ -285,23 +284,7 @@ Widget _buildStatCard(String title, String value, IconData icon) {
                   crossAxisAlignment: CrossAxisAlignment.baseline,
                   textBaseline: TextBaseline.alphabetic,
                   children: [
-                    Text(
-                      value,
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w700,
-                        color: _textPrimary,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'items',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: _textSecondary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+
                   ],
                 ),
               ],
@@ -309,6 +292,7 @@ Widget _buildStatCard(String title, String value, IconData icon) {
           ),
         ),
       ],
+    ),
     ),
   );
 }
@@ -378,6 +362,9 @@ Widget _buildStatCard(String title, String value, IconData icon) {
           await Navigator.pushNamed(context, route);
           // Reload active prescription count after returning
           await _loadActivePrescriptionCount();
+        } else if (route == '/reminder') {
+          await Navigator.pushNamed(context, route);
+          // Reload reminder count after returning
         } else {
           Navigator.pushNamed(context, route);
         }
@@ -405,120 +392,6 @@ Widget _buildStatCard(String title, String value, IconData icon) {
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildReminderSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Today\'s Reminders',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: _textPrimary,
-                ),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pushReplacementNamed(context, '/reminder'),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'View All',
-                      style: TextStyle(
-                        color: _accentColor,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Icon(Icons.arrow_forward, size: 16, color: _accentColor),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        _buildReminderItem('Paracetamol', '8:00 AM', true),
-        _buildReminderItem('Vitamin C', '1:30 PM', false),
-        _buildReminderItem('Aspirin', '8:00 PM', false),
-      ],
-    );
-  }
-  
-  Widget _buildReminderItem(String medicine, String time, bool taken) {
-    final statusColor = taken ? const Color(0xFF4CAF50) : const Color(0xFFFF9F1C);
-    
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      decoration: BoxDecoration(
-        color: _cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              taken ? Icons.check : Icons.access_time,
-              color: statusColor,
-              size: 18,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  medicine,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: _textPrimary,
-                    decoration: taken ? TextDecoration.lineThrough : null,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  taken ? 'Medication taken' : 'Take your medication',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: _textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              time,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: statusColor,
-              ),
             ),
           ),
         ],
@@ -589,6 +462,120 @@ Widget _buildStatCard(String title, String value, IconData icon) {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMedicineManagement() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            // Daily Reminders Card
+            Expanded(
+              child: _buildMedicineCard(
+                title: 'Daily Reminders',
+                icon: Icons.medication_liquid_rounded,
+                color: const Color(0xFF7B68EE),
+                onTap: () => Navigator.pushNamed(context, '/reminder'),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMedicineCard({
+    required String title,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: _backgroundColor,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Icon and title
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: color,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: _textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // Action button
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Open',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: color,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 14,
+                    color: color,
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
