@@ -18,7 +18,8 @@ class _HomePageState extends State<HomePage> {
   bool _hasUnreadMention = false;
   int _activePrescriptionCount = 0;
   static const String _mentionKey = 'has_unread_mention';
-  static const String _activePrescriptionsCountKey = 'active_prescriptions_count';
+  static const String _activePrescriptionsCountKey =
+      'active_prescriptions_count';
 
   // Design colors
   final Color _primaryColor = const Color(0xFF5C6BC0); // Dark blue-gray
@@ -26,6 +27,7 @@ class _HomePageState extends State<HomePage> {
   final Color _backgroundColor = Colors.white;
   final Color _textPrimary = const Color(0xFF2D3142);
   final Color _textSecondary = const Color(0xFF9A9A9A);
+  final Color _cardColor = const Color(0xFFF9F9F9); // Light gray
 
   @override
   void initState() {
@@ -33,12 +35,14 @@ class _HomePageState extends State<HomePage> {
     _loadUserId();
     _checkForMentions();
     _loadActivePrescriptionCount();
-    
+
     // Set status bar style
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-    ));
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+      ),
+    );
   }
 
   Future<void> _loadUserId() async {
@@ -64,10 +68,13 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadActivePrescriptionCount() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final cachedPrescriptionsJson = prefs.getString('cached_prescriptions_v2');
+      final cachedPrescriptionsJson = prefs.getString(
+        'cached_prescriptions_v2',
+      );
       if (cachedPrescriptionsJson != null) {
         try {
-          final decoded = jsonDecode(cachedPrescriptionsJson) as Map<String, dynamic>;
+          final decoded =
+              jsonDecode(cachedPrescriptionsJson) as Map<String, dynamic>;
           final prescriptionsRaw = decoded['prescriptions'] as List<dynamic>;
           int activeCount = 0;
           for (var p in prescriptionsRaw) {
@@ -90,7 +97,7 @@ class _HomePageState extends State<HomePage> {
       print('Error loading active prescription count: $e');
     }
   }
-  
+
   // Call this method when navigating to chat
   void _clearMentions() async {
     try {
@@ -110,35 +117,45 @@ class _HomePageState extends State<HomePage> {
       onWillPop: () async {
         final shouldExit = await showDialog<bool>(
           context: context,
-          builder: (context) => AlertDialog(
-            title: Text('Exit App', style: TextStyle(color: _textPrimary, fontWeight: FontWeight.bold)),
-            content: const Text('Are you sure you want to exit the app?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: Text('Cancel', style: TextStyle(color: _textSecondary)),
-              ),
-              FilledButton(
-                onPressed: () {
-                  Navigator.of(context).pop(true);
-                  Future.delayed(const Duration(milliseconds: 100), () {
-                    SystemNavigator.pop();
-                  });
-                },
-                style: FilledButton.styleFrom(
-                  backgroundColor: _accentColor,
+          builder:
+              (context) => AlertDialog(
+                title: Text(
+                  'Exit App',
+                  style: TextStyle(
+                    color: _textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.exit_to_app, size: 18, color: Colors.white),
-                    const SizedBox(width: 6),
-                    const Text('Exit'),
-                  ],
-                ),
+                content: const Text('Are you sure you want to exit the app?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(color: _textSecondary),
+                    ),
+                  ),
+                  FilledButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(true);
+                      Future.delayed(const Duration(milliseconds: 100), () {
+                        SystemNavigator.pop();
+                      });
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: _accentColor,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.exit_to_app, size: 18, color: Colors.white),
+                        const SizedBox(width: 6),
+                        const Text('Exit'),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
         );
         return shouldExit ?? false;
       },
@@ -212,101 +229,155 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-  
 
-
-  
   Widget _buildStatRow() {
     return Row(
       children: [
-        Expanded(child: _buildStatCard('Active \nPrescriptions', 
-          _activePrescriptionCount.toString(), Icons.medication_rounded)),
+        Expanded(
+          child: _buildStatCard(
+            'Active \nPrescriptions',
+            _activePrescriptionCount.toString(),
+            Icons.medication_rounded,
+          ),
+        ),
       ],
     );
   }
-  
-Widget _buildStatCard(String title, String value, IconData icon, {VoidCallback? onTap}) {
-  return GestureDetector(
-    onTap: onTap,
-    child: Container(
-    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.04),
-          blurRadius: 8,
-          offset: const Offset(0, 3),
-        ),
-      ],
-    ),
-    child: Row(
-      children: [
-        // Left accent bar with icon
-        Container(
-          width: 60, // reduced width for smaller screens
-          height: 80, // reduced height for smaller screens
-          decoration: BoxDecoration(
-            color: _accentColor,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Center(
-            child: Icon(
-              icon,
-              color: Colors.white,
-              size: 28,
-            ),
-          ),
-        ),
-        // Content section
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  value + ' ' + title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: _textPrimary,
-                  ),
-                ),
-                // Title
-                
-                const SizedBox(height: 8),
-                
-                // Value with custom styling
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
 
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon, {
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Left accent bar with icon
+            Container(
+              width: 60, // reduced width for smaller screens
+              height: 80, // reduced height for smaller screens
+              decoration: BoxDecoration(
+                color: _accentColor,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(child: Icon(icon, color: Colors.white, size: 28)),
+            ),
+            // Content section
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      value + ' ' + title,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: _textPrimary,
+                      ),
+                    ),
+
+                    // Title
+                    const SizedBox(height: 8),
+
+                    // Value with custom styling
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [],
+                    ),
                   ],
                 ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
-      ],
-    ),
-    ),
-  );
-}
-  
+      ),
+    );
+  }
+
   Widget _buildQuickActions() {
     final actionItems = [
-      {'title': 'Medicine Search', 'icon': Icons.search, 'route': '/medicineSearch', 'color': const Color(0xFF4361EE)},
-      {'title': 'Add Prescription', 'icon': Icons.add_circle, 'route': '/createPrescription', 'color': const Color(0xFF2EC4B6)},
-      {'title': 'View Prescriptions', 'icon': Icons.description, 'route': '/viewPrescriptions', 'color': const Color(0xFF3A86FF)},
-      {'title': 'My Reports', 'icon': Icons.analytics, 'route': '/report', 'color': const Color(0xFF8338EC)},
-      {'title': 'Scan QR', 'icon': Icons.qr_code_scanner, 'route': '/scanQrPage', 'color': const Color(0xFF2D3142)},
-      {'title': 'Sharing History', 'icon': Icons.share_outlined, 'route': '/sharingHistory', 'color': const Color(0xFFF72585)},
-      {'title': 'Community Chat', 'icon': Icons.forum, 'route': '/chatPage', 'color': _hasUnreadMention ? const Color(0xFFFF0000) : const Color(0xFF06D6A0)},
-      {'title': 'Reviews', 'icon': Icons.star, 'route': '/reviews', 'color': const Color(0xFFFF9F1C)},
+      {
+        'title': 'Medicine Search',
+        'icon': Icons.search,
+        'route': '/medicineSearch',
+        'color': const Color(0xFF4361EE),
+      },
+      {
+        'title': 'Add Prescription',
+        'icon': Icons.add_circle,
+        'route': '/createPrescription',
+        'color': const Color(0xFF2EC4B6),
+      },
+      {
+        'title': 'View Prescriptions',
+        'icon': Icons.description,
+        'route': '/viewPrescriptions',
+        'color': const Color(0xFF3A86FF),
+      },
+      {
+        'title': 'My Reports',
+        'icon': Icons.analytics,
+        'route': '/report',
+        'color': const Color(0xFF8338EC),
+      },
+      {
+        'title': 'Scan QR',
+        'icon': Icons.qr_code_scanner,
+        'route': '/scanQrPage',
+        'color': const Color(0xFF2D3142),
+      },
+      {
+        'title': 'Sharing History',
+        'icon': Icons.share_outlined,
+        'route': '/sharingHistory',
+        'color': const Color(0xFFF72585),
+      },
+      {
+        'title': 'Community Chat',
+        'icon': Icons.forum,
+        'route': '/chatPage',
+        'color':
+            _hasUnreadMention
+                ? const Color(0xFFFF0000)
+                : const Color(0xFF06D6A0),
+      },
+      {
+        'title': 'Reviews',
+        'icon': Icons.star,
+        'route': '/reviews',
+        'color': const Color(0xFFFF9F1C),
+      },
+      {
+        'title': 'Medicine Delivery',
+        'icon': Icons.delivery_dining,
+        'route': '/medicineDelivery',
+        'color': const Color(0xFF8D99AE),
+      },
+      {
+        'title': 'Ambulance services',
+        'icon': Icons.car_rental,
+        'route': '/ambulanceServices',
+        'color': const Color(0xFFFFC300),
+      },
     ];
 
     return Column(
@@ -346,7 +417,7 @@ Widget _buildStatCard(String title, String value, IconData icon, {VoidCallback? 
       ],
     );
   }
-  
+
   Widget _buildActionItem({
     required String title,
     required IconData icon,
@@ -398,72 +469,72 @@ Widget _buildStatCard(String title, String value, IconData icon, {VoidCallback? 
       ),
     );
   }
-  
+
   void _showQrCode() {
     if (userId == null) return;
 
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'My QR Code',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: _textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                QrImageView(
-                  data: 'USERID-$userId',
-                  version: QrVersions.auto,
-                  size: 200,
-                  backgroundColor: Colors.white,
-                  foregroundColor: _primaryColor,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'ID: ${userId?.substring(0, 8)}...',
-                  style: TextStyle(
-                    color: _textSecondary,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+      builder:
+          (context) => Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text(
-                        'Close',
-                        style: TextStyle(color: _textSecondary),
+                    Text(
+                      'My QR Code',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: _textPrimary,
                       ),
                     ),
-                    FilledButton(
-                      onPressed: () {
-                        // Implement share function
-                        Navigator.pop(context);
-                      },
-                      style: FilledButton.styleFrom(
-                        backgroundColor: _accentColor,
-                      ),
-                      child: const Text('Share'),
+                    const SizedBox(height: 24),
+                    QrImageView(
+                      data: 'USERID-$userId',
+                      version: QrVersions.auto,
+                      size: 200,
+                      backgroundColor: Colors.white,
+                      foregroundColor: _primaryColor,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'ID: ${userId?.substring(0, 8)}...',
+                      style: TextStyle(color: _textSecondary, fontSize: 14),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: Text(
+                            'Close',
+                            style: TextStyle(color: _textSecondary),
+                          ),
+                        ),
+                        FilledButton(
+                          onPressed: () {
+                            // Implement share function
+                            Navigator.pop(context);
+                          },
+                          style: FilledButton.styleFrom(
+                            backgroundColor: _accentColor,
+                          ),
+                          child: const Text('Share'),
+                        ),
+                      ],
                     ),
                   ],
-                )
-              ],
+                ),
+              ),
             ),
           ),
-        ),
-      ),
     );
   }
 
@@ -522,11 +593,7 @@ Widget _buildStatCard(String title, String value, IconData icon, {VoidCallback? 
                     color: color.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(
-                    icon,
-                    color: color,
-                    size: 24,
-                  ),
+                  child: Icon(icon, color: color, size: 24),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -567,11 +634,7 @@ Widget _buildStatCard(String title, String value, IconData icon, {VoidCallback? 
                     ),
                   ),
                   const SizedBox(width: 4),
-                  Icon(
-                    Icons.arrow_forward_rounded,
-                    size: 14,
-                    color: color,
-                  ),
+                  Icon(Icons.arrow_forward_rounded, size: 14, color: color),
                 ],
               ),
             ),
