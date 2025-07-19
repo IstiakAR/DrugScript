@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:drugscript/screens/medicineCategoryPage.dart';
 import 'package:drugscript/screens/location_picker_page.dart';
-import 'package:drugscript/screens/medicine_search.dart';
+import 'patient_medicine_search.dart';
 import 'package:drugscript/models/cart_item.dart';
 import 'package:drugscript/screens/shopping_cart.dart';
 
@@ -15,14 +15,54 @@ class MedicineDeliveryPatient extends StatefulWidget {
       _MedicineDeliveryPatientState();
 }
 
-class _MedicineDeliveryPatientState extends State<MedicineDeliveryPatient> {
+class _MedicineDeliveryPatientState extends State<MedicineDeliveryPatient>
+    with SingleTickerProviderStateMixin {
   List<CartItem> cart = [];
   String currentAddress = "Tap to select location";
+  bool _showLocationBanner = true;
+  late AnimationController _animationController;
+  late Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
     super.initState();
     currentAddress = widget.currentAddress;
+
+    // Initialize animation controller
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+
+    // Initialize slide animation
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, -1),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+
+    // Start the animation
+    _animationController.forward();
+
+    // Hide banner after 3 seconds
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        _animationController.reverse().then((_) {
+          if (mounted) {
+            setState(() {
+              _showLocationBanner = false;
+            });
+          }
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   void updateAddress(String newAddress) {
@@ -208,103 +248,208 @@ class _MedicineDeliveryPatientState extends State<MedicineDeliveryPatient> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
-      appBar: AppBar(
-        backgroundColor: Colors.blueGrey.shade800,
-        elevation: 0,
-        title: GestureDetector(
-          onTap: () async {
-            final selectedAddress = await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const LocationPickerPage()),
-            );
-            if (selectedAddress != null) {
-              updateAddress(selectedAddress);
-            }
-          },
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Deliver to",
-                style: TextStyle(fontSize: 14, color: Colors.white70),
-              ),
-              Text(
-                currentAddress,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(
+          kToolbarHeight + (_showLocationBanner ? 40 : 0),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search, color: Colors.white),
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder:
-                      (_) => MedicineSearchApp(
-                        cart: cart,
-                        addToCart: addToCart,
-                        selectionMode: true,
-                      ),
-                ),
-              );
-              setState(() {});
-            },
-          ),
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.shopping_cart, color: Colors.white),
-                onPressed: () async {
-                  await Navigator.push(
+        child: Stack(
+          children: [
+            AppBar(
+              backgroundColor: Colors.blueGrey.shade800,
+              elevation: 0,
+              title: GestureDetector(
+                onTap: () async {
+                  final selectedAddress = await Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder:
-                          (_) => CartScreen(
-                            cartItems: cart,
-                            onRemoveItem: removeFromCart,
-                            onUpdateQuantity: updateCartItemQuantity,
-                          ),
+                      builder: (_) => const LocationPickerPage(),
                     ),
                   );
-                  setState(() {});
+                  if (selectedAddress != null) {
+                    updateAddress(selectedAddress);
+                  }
                 },
-              ),
-              if (cart.isNotEmpty)
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      color: Colors.teal,
-                      borderRadius: BorderRadius.circular(10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Deliver to",
+                      style: TextStyle(fontSize: 14, color: Colors.white70),
                     ),
-                    constraints: const BoxConstraints(
-                      minWidth: 16,
-                      minHeight: 16,
-                    ),
-                    child: Text(
-                      totalCartItems > 99 ? '99+' : totalCartItems.toString(),
+                    Text(
+                      currentAddress,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
                         fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.white,
                       ),
-                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.search, color: Colors.white),
+                  onPressed: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (_) => PatientMedicineSearch(
+                              cart: cart,
+                              addToCart: addToCart,
+                              selectionMode: true,
+                            ),
+                      ),
+                    );
+                    setState(() {});
+                  },
+                ),
+                Stack(
+                  children: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.shopping_cart,
+                        color: Colors.white,
+                      ),
+                      onPressed: () async {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (_) => CartScreen(
+                                  cartItems: cart,
+                                  onRemoveItem: removeFromCart,
+                                  onUpdateQuantity: updateCartItemQuantity,
+                                ),
+                          ),
+                        );
+                        setState(() {});
+                      },
+                    ),
+                    if (cart.isNotEmpty)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.teal,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          child: Text(
+                            totalCartItems > 99
+                                ? '99+'
+                                : totalCartItems.toString(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+            // Animated Location Banner
+            if (_showLocationBanner)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: SlideTransition(
+                  position: _slideAnimation,
+                  child: Container(
+                    height: 40,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.orange.shade400,
+                          Colors.orange.shade600,
+                        ],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.location_on,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Please confirm your location',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: GestureDetector(
+                            onTap: () async {
+                              final selectedAddress = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const LocationPickerPage(),
+                                ),
+                              );
+                              if (selectedAddress != null) {
+                                updateAddress(selectedAddress);
+                                // Hide banner immediately when location is selected
+                                _animationController.reverse().then((_) {
+                                  if (mounted) {
+                                    setState(() {
+                                      _showLocationBanner = false;
+                                    });
+                                  }
+                                });
+                              }
+                            },
+                            child: const Text(
+                              'Tap here',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-            ],
-          ),
-        ],
+              ),
+          ],
+        ),
       ),
       body: ListView(
         children: [
@@ -408,7 +553,7 @@ class _MedicineDeliveryPatientState extends State<MedicineDeliveryPatient> {
                       context,
                       MaterialPageRoute(
                         builder:
-                            (_) => MedicineSearchApp(
+                            (_) => PatientMedicineSearch(
                               cart: cart,
                               addToCart: addToCart,
                               selectionMode: true,
