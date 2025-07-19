@@ -21,6 +21,9 @@ import 'package:drugscript/screens/scan_qr_page.dart';
 import 'package:drugscript/screens/sharing_history.dart';
 import 'package:drugscript/screens/chat_page.dart';
 import 'package:drugscript/screens/reminder_page.dart';
+import 'package:drugscript/screens/ambulance_services_page.dart';
+import 'package:drugscript/screens/medicine_delivery_hub.dart';
+import 'package:drugscript/models/cart_item.dart';
 
 import 'package:drugscript/theme/app_theme.dart';
 
@@ -74,8 +77,7 @@ class MyApp extends StatelessWidget {
         if (settings.name == '/prescriptionDetails') {
           final prescriptionId = settings.arguments as String;
           return MaterialPageRoute(
-            builder: (_) =>
-                PrescriptionDetails(prescriptionId: prescriptionId),
+            builder: (_) => PrescriptionDetails(prescriptionId: prescriptionId),
           );
         }
 
@@ -88,7 +90,16 @@ class MyApp extends StatelessWidget {
           case '/homePage':
             return MaterialPageRoute(builder: (_) => const HomePage());
           case '/medicineSearch':
-            return MaterialPageRoute(builder: (_) => const MedicineSearchApp());
+            return MaterialPageRoute(
+              builder:
+                  (_) => MedicineSearchApp(
+                    cart: <CartItem>[],
+                    addToCart: (item) {
+                      // Your logic here
+                    },
+                    selectionMode: true, // <-- Add this line
+                  ),
+            );
           case '/createPrescription':
             return MaterialPageRoute(builder: (_) => const AddPrescription());
           case '/report':
@@ -105,6 +116,20 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(builder: (_) => const ReviewHomePage());
           case '/reminder':
             return MaterialPageRoute(builder: (_) => const ReminderPage());
+          case '/medicineDelivery':
+            final currentAddress =
+                settings.arguments as String? ?? "Tap to select location";
+            return MaterialPageRoute(
+              builder:
+                  (_) => MedicineDeliveryHub(currentAddress: currentAddress),
+            );
+          case '/ambulanceServices':
+            final currentAddress =
+                settings.arguments as String? ?? "Tap to select location";
+            return MaterialPageRoute(
+              builder:
+                  (_) => AmbulanceServicesPage(currentAddress: currentAddress),
+            );
         }
         return null;
       },
