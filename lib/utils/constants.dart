@@ -1,6 +1,8 @@
+import 'package:drugscript/services/ServerBaseURL.dart';
+
 class AppConstants {
   // API Base URL
-  static const String baseUrl = 'https://fastapi-app-production-6e30.up.railway.app';
+  static const String baseUrl = ServerConfig.baseUrl;
   
   // API Endpoints
   static const String profileEndpoint = '/profile';

@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:drugscript/services/ServerBaseURL.dart';
 
 class ScanQrPage extends StatefulWidget {
   const ScanQrPage({super.key});
@@ -262,7 +263,7 @@ class _ScanQrPageState extends State<ScanQrPage> with SingleTickerProviderStateM
       if (token == null) return false;
       
       final uri = Uri.parse(
-        'https://fastapi-app-production-6e30.up.railway.app/recievedPrescription',
+        '${ServerConfig.baseUrl}/recievedPrescription',
       );
       final resp = await http.post(
         uri,
@@ -286,7 +287,7 @@ class _ScanQrPageState extends State<ScanQrPage> with SingleTickerProviderStateM
       if (token == null) return null;
       
       final uri = Uri.parse(
-        'https://fastapi-app-production-6e30.up.railway.app/profile/public/$userId',
+        '${ServerConfig.baseUrl}/profile/public/$userId',
       );
       final response = await http.get(
         uri,

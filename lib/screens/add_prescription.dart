@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'medicine_search.dart';
+import 'package:drugscript/services/ServerBaseURL.dart';
 
 class AddPrescription extends StatefulWidget {
   const AddPrescription({super.key});
@@ -312,7 +313,7 @@ class _AddPrescriptionState extends State<AddPrescription> {
       // Send HTTP request to your FastAPI endpoint
       final response = await http.post(
         Uri.parse(
-          'https://fastapi-app-production-6e30.up.railway.app/add_prescription',
+          '${ServerConfig.baseUrl}/add_prescription',
         ),
         headers: {
           'Content-Type': 'application/json',

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:drugscript/services/ServerBaseURL.dart';
 
 class SharingHistory extends StatefulWidget {
   const SharingHistory({super.key});
@@ -80,13 +81,13 @@ class _SharingHistoryState extends State<SharingHistory>
       final futures = await Future.wait([
         http.get(
           Uri.parse(
-            'https://fastapi-app-production-6e30.up.railway.app/recievedPrescription',
+            '${ServerConfig.baseUrl}/recievedPrescription',
           ),
           headers: headers,
         ),
         http.get(
           Uri.parse(
-            'https://fastapi-app-production-6e30.up.railway.app/sentPrescriptions',
+            '${ServerConfig.baseUrl}/sentPrescriptions',
           ),
           headers: headers,
         ),

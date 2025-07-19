@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:drugscript/services/ServerBaseURL.dart';
 
 class PrescriptionDetails extends StatefulWidget {
   final String prescriptionId;
@@ -69,7 +70,7 @@ class _PrescriptionDetailsState extends State<PrescriptionDetails> with SingleTi
       final String? authToken = await _getAuthToken();
       final response = await http.get(
         Uri.parse(
-          'https://fastapi-app-production-6e30.up.railway.app/prescription/${widget.prescriptionId}',
+          '${ServerConfig.baseUrl}/prescription/${widget.prescriptionId}',
         ),
         headers: {
           'Content-Type': 'application/json',
@@ -106,7 +107,7 @@ class _PrescriptionDetailsState extends State<PrescriptionDetails> with SingleTi
       final String? authToken = await _getAuthToken();
       final response = await http.get(
         Uri.parse(
-          'https://fastapi-app-production-6e30.up.railway.app/medicine/${medicine['slug']}',
+          '${ServerConfig.baseUrl}/medicine/${medicine['slug']}',
         ),
         headers: {
           'Content-Type': 'application/json',

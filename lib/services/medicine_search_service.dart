@@ -3,10 +3,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:drugscript/services/ServerBaseURL.dart';
 
 class MedicineSearchService {
   static const String _baseUrl =
-      'https://fastapi-app-production-6e30.up.railway.app/medicinesearch';
+      '${ServerConfig.baseUrl}/medicinesearch';
 
   static Future<List<dynamic>> searchMedicines(String query) async {
     if (query.isEmpty) {

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:http/http.dart' as http;
 import 'package:shimmer/shimmer.dart';
+import 'package:drugscript/services/ServerBaseURL.dart';
 
 void main() {
   runApp(const MyApp());
@@ -150,7 +151,7 @@ class DoctorSelectionPage extends StatefulWidget {
 
 class _DoctorSelectionPageState extends State<DoctorSelectionPage> with AutomaticKeepAliveClientMixin {
   final TextEditingController _doctorIdController = TextEditingController();
-  final String _baseUrl = 'https://fastapi-app-production-6e30.up.railway.app';
+  final String _baseUrl = ServerConfig.baseUrl;
   bool _loadingTop = true;
   bool _isError = false;
   List<Map<String, dynamic>> _topDoctors = [];
@@ -574,7 +575,7 @@ class ClinicSelectionPage extends StatefulWidget {
 
 class _ClinicSelectionPageState extends State<ClinicSelectionPage> with AutomaticKeepAliveClientMixin {
   final _searchController = TextEditingController();
-  final _baseUrl = 'https://fastapi-app-production-6e30.up.railway.app';
+  final _baseUrl = ServerConfig.baseUrl;
 
   bool _loadingTop = true;
   bool _isTopError = false;
@@ -1118,7 +1119,7 @@ class _ReviewPageState extends State<ReviewPage> {
   final Color _textSecondary = const Color(0xFF7F8C8D);
   final Color _starColor = const Color(0xFFFFC107);
 
-  final String baseUrl = 'https://fastapi-app-production-6e30.up.railway.app';
+  final String baseUrl = ServerConfig.baseUrl;
 
   @override
   void initState() {

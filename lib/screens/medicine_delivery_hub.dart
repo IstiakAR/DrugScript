@@ -21,11 +21,7 @@ class _MedicineDeliveryHubState extends State<MedicineDeliveryHub> {
         preferredSize: const Size.fromHeight(kToolbarHeight),
         child: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [const Color(0xFF667eea), const Color(0xFF764ba2)],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
+            color: Colors.white,
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.1),
@@ -47,7 +43,7 @@ class _MedicineDeliveryHubState extends State<MedicineDeliveryHub> {
             foregroundColor: Colors.white,
             elevation: 0,
             centerTitle: true,
-            iconTheme: const IconThemeData(color: Colors.white, size: 24),
+            iconTheme: const IconThemeData(color: Color.fromARGB(255, 0, 0, 0), size: 24),
           ),
         ),
       ),

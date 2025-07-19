@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:drugscript/services/ServerBaseURL.dart';
 
 class ViewPrescription extends StatefulWidget {
   const ViewPrescription({super.key});
@@ -149,7 +150,7 @@ class _ViewPrescriptionState extends State<ViewPrescription>
       final String? authToken = await _getAuthToken();
 
       final response = await http.get(
-        Uri.parse('https://fastapi-app-production-6e30.up.railway.app/prescriptions'),
+        Uri.parse('${ServerConfig.baseUrl}/prescriptions'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $authToken',
@@ -195,7 +196,7 @@ class _ViewPrescriptionState extends State<ViewPrescription>
       final token = await _getAuthToken();
       final response = await http.delete(
         Uri.parse(
-          'https://fastapi-app-production-6e30.up.railway.app/prescription/$prescriptionId',
+          '${ServerConfig.baseUrl}/prescription/$prescriptionId',
         ),
         headers: {
           'Content-Type': 'application/json',
