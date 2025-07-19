@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:drugscript/screens/medicineCategoryPage.dart';
 import 'package:drugscript/screens/location_picker_page.dart';
-import 'package:drugscript/screens/medicine_search.dart';
+import 'patient_medicine_search.dart';
 import 'package:drugscript/models/cart_item.dart';
 import 'package:drugscript/screens/shopping_cart.dart';
 import 'package:drugscript/screens/medicine_delivery_hub.dart';
@@ -232,7 +232,7 @@ class _DeliveryState extends State<Delivery> {
                 context,
                 MaterialPageRoute(
                   builder:
-                      (_) => MedicineSearchApp(
+                      (_) => PatientMedicineSearch(
                         cart: cart,
                         addToCart: addToCart,
                         selectionMode: true,
@@ -481,7 +481,7 @@ class _DeliveryState extends State<Delivery> {
                       context,
                       MaterialPageRoute(
                         builder:
-                            (_) => MedicineSearchApp(
+                            (_) => PatientMedicineSearch(
                               cart: cart,
                               addToCart: addToCart,
                               selectionMode: true,
