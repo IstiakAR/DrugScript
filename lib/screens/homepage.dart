@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print, deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -27,7 +29,6 @@ class _HomePageState extends State<HomePage> {
   final Color _backgroundColor = Colors.white;
   final Color _textPrimary = const Color(0xFF2D3142);
   final Color _textSecondary = const Color(0xFF9A9A9A);
-  final Color _cardColor = const Color(0xFFF9F9F9); // Light gray
 
   @override
   void initState() {
@@ -286,7 +287,7 @@ class _HomePageState extends State<HomePage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      value + ' ' + title,
+                      '$value $title',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,

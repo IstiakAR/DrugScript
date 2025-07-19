@@ -1,7 +1,9 @@
+// ignore_for_file: avoid_print, deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart' as user_location;
-import 'package:google_maps_webservice/places.dart';
+import 'package:flutter_google_maps_webservices/places.dart';
 import 'dart:async';
 import 'dart:math';
 
@@ -964,7 +966,7 @@ class _AmbulancePatientSideState extends State<AmbulancePatientSide>
                                     size: 18,
                                   ),
                                   Text(
-                                    ' ${ambulance.rating} • ETA: ${eta} mins',
+                                    ' ${ambulance.rating} • ETA: $eta mins',
                                     style: TextStyle(
                                       fontSize: 14,
                                       color: Colors.grey.shade600,
