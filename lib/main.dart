@@ -23,7 +23,6 @@ import 'package:drugscript/screens/chat_page.dart';
 import 'package:drugscript/screens/reminder_page.dart';
 import 'package:drugscript/screens/ambulance_services_page.dart';
 import 'package:drugscript/screens/medicine_delivery_hub.dart';
-import 'package:drugscript/models/cart_item.dart';
 
 import 'package:drugscript/theme/app_theme.dart';
 
@@ -90,16 +89,7 @@ class MyApp extends StatelessWidget {
           case '/homePage':
             return MaterialPageRoute(builder: (_) => const HomePage());
           case '/medicineSearch':
-            return MaterialPageRoute(
-              builder:
-                  (_) => MedicineSearchApp(
-                    cart: <CartItem>[],
-                    addToCart: (item) {
-                      // Your logic here
-                    },
-                    selectionMode: true, // <-- Add this line
-                  ),
-            );
+            return MaterialPageRoute(builder: (_) => const MedicineSearchApp());
           case '/createPrescription':
             return MaterialPageRoute(builder: (_) => const AddPrescription());
           case '/report':
