@@ -3,6 +3,10 @@ import 'package:drugscript/services/ServerBaseURL.dart';
 class AppConstants {
   // API Base URL
   static const String baseUrl = ServerConfig.baseUrl;
+
+  // Google Maps / Places key, injected at build time: --dart-define-from-file=env.json
+  static const String googleMapsApiKey =
+      String.fromEnvironment('GOOGLE_MAPS_API_KEY');
   
   // API Endpoints
   static const String profileEndpoint = '/profile';

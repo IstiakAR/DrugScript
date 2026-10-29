@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:drugscript/utils/constants.dart';
 
 class AddressPickerPage extends StatefulWidget {
   final LatLng initialLocation;
@@ -15,8 +16,7 @@ class _AddressPickerPageState extends State<AddressPickerPage> {
   late LatLng selectedLocation;
   TextEditingController searchController = TextEditingController();
   List<dynamic> suggestions = [];
-  final String apiKey =
-      'AIzaSyBc2xx1XkgZKPcrrQl5HVGMZv_xSfdMxXQ'; // Replace with your API key
+  final String apiKey = AppConstants.googleMapsApiKey;
 
   @override
   void initState() {

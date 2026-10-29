@@ -88,3 +88,8 @@ web/build/
 firebase_options.dart
 
 devtools_options.yaml
+
+# Secrets / environment config (see env.example.json)
+env.json
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist

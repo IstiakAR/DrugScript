@@ -117,26 +117,32 @@ To use a local or different backend, change `baseUrl`.
    flutter pub get
    ```
 
-2. **Firebase**
+2. **Firebase** (these files are gitignored, so get them from the Firebase console or a teammate)
    - Android: put `google-services.json` in `android/app/`.
    - iOS: put `GoogleService-Info.plist` in `ios/Runner/`.
    - Add your debug and release SHA-1 fingerprints in the Firebase console so Google Sign-In works on Android.
 
-3. **Google Maps**
-   - Set your key in `android/app/src/main/AndroidManifest.xml` (`com.google.android.geo.API_KEY`).
-   - The Places key used in `address_picker_page.dart` and `ambulance_patient_side.dart` must also be valid.
+3. **Google Maps / Places key**
+   ```bash
+   cp env.example.json env.json   # then put your key in env.json
+   ```
+   `env.json` is gitignored. The key is passed in at build time. Dart reads it with
+   `String.fromEnvironment('GOOGLE_MAPS_API_KEY')`, and the Android build puts it into
+   `AndroidManifest.xml` through a manifest placeholder. (You can also set `MAPS_API_KEY=...` in
+   `android/local.properties` for the native Android map only.)
 
 4. **Run**
    ```bash
-   flutter run
+   flutter run --dart-define-from-file=env.json
    ```
+   In VS Code, add `"toolArgs": ["--dart-define-from-file=env.json"]` to your launch configuration.
 
 ### Other commands
 
 ```bash
 flutter analyze                                # Static analysis (flutter_lints)
 flutter test                                   # Run tests
-flutter build apk --release                    # Android release build
+flutter build apk --release --dart-define-from-file=env.json  # Android release build
 dart run flutter_launcher_icons                # Regenerate app icons from assets/logo.png
 ```
 

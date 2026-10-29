@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart' as user_location;
 import 'package:flutter_google_maps_webservices/places.dart';
+import 'package:drugscript/utils/constants.dart';
 import 'dart:async';
 import 'dart:math';
 
@@ -124,7 +125,7 @@ class _AmbulancePatientSideState extends State<AmbulancePatientSide>
   ];
 
   final GoogleMapsPlaces places = GoogleMapsPlaces(
-    apiKey: "AIzaSyBc2xx1XkgZKPcrrQl5HVGMZv_xSfdMxXQ",
+    apiKey: AppConstants.googleMapsApiKey,
   );
 
   List<AmbulanceInfo> nearbyAmbulances = [

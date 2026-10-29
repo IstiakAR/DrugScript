@@ -5,6 +5,30 @@ plugins {
     id("com.google.gms.google-services")
 }
 
+// Google Maps key for AndroidManifest: taken from the Flutter --dart-define(-from-file)
+// values, falling back to MAPS_API_KEY in android/local.properties.
+val dartDefines: Map<String, String> =
+    (project.findProperty("dart-defines") as String?)
+        ?.split(",")
+        ?.filter { it.isNotBlank() }
+        ?.map { String(java.util.Base64.getDecoder().decode(it)) }
+        ?.mapNotNull { entry ->
+            val i = entry.indexOf('=')
+            if (i > 0) entry.substring(0, i) to entry.substring(i + 1) else null
+        }
+        ?.toMap()
+        ?: emptyMap()
+
+val localProperties = java.util.Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+
+val googleMapsApiKey: String =
+    dartDefines["GOOGLE_MAPS_API_KEY"]
+        ?: localProperties.getProperty("MAPS_API_KEY")
+        ?: ""
+
 android {
     namespace = "com.example.drugscript"
     compileSdk = flutter.compileSdkVersion
@@ -27,6 +51,7 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         multiDexEnabled = true
+        manifestPlaceholders["googleMapsApiKey"] = googleMapsApiKey
     }
 
     buildTypes {
